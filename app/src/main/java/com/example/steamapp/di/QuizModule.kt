@@ -1,11 +1,17 @@
 package com.example.steamapp.di
 
 import androidx.room.Room
+import com.example.steamapp.quiz_feature.data.local.dao.QuizDao
 import com.example.steamapp.quiz_feature.data.local.database.QuizDatabase
+import com.example.steamapp.quiz_feature.data.repository.QuizRepositoryImpl
+import com.example.steamapp.quiz_feature.domain.repository.QuizRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 val quizModule= module {
+    single<QuizRepository> {
+        QuizRepositoryImpl(dao = get<QuizDatabase>().dao)
+    }
     single {
         Room.databaseBuilder(
             androidContext(),
