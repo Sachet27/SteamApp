@@ -101,7 +101,8 @@ fun RaspberryPiQuizzesScreen(
                     quiz = quiz,
                     onClick = {},
                     onIconClick = {},
-                    icon = R.drawable.presentation_icon
+                    icon = R.drawable.presentation_icon,
+                    onDelete = {onAction(QuizActions.onDeleteQuiz(quizId = quiz.quizId))}
                 )
             }
         }

@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.steamapp.core.navigation.AppNavHost
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
@@ -56,9 +57,7 @@ class MainActivity : ComponentActivity() {
             val viewModel: QuizViewModel= koinViewModel()
             val state by viewModel.quizState.collectAsStateWithLifecycle()
             SteamAppTheme {
-                    HomeScreen(
-                        state = state
-                    ) { }
+                    AppNavHost()
             }
         }
     }

@@ -51,7 +51,8 @@ import java.time.Instant
 fun HomeScreen(
     modifier: Modifier = Modifier,
     state: QuizState,
-    onAction: (QuizActions)-> Unit
+    onAction: (QuizActions)-> Unit,
+    onNavToEditQuizScreen: ()->Unit
 ) {
     var selectedIndex by remember{ mutableStateOf(0) }
     val pagerState= rememberPagerState { TabItem.tabItemsList.size }
@@ -76,7 +77,10 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {}
+                onClick = {
+                    onAction(QuizActions.onLoadQuizData(null))
+                    onNavToEditQuizScreen()
+                }
             ) {
                 Icon(imageVector = Icons.Outlined.Add, null)
             }
@@ -129,7 +133,10 @@ fun HomeScreen(
                     0-> MyQuizzesScreen(
                         modifier = Modifier.fillMaxSize(),
                         state = state,
-                        onAction = onAction
+                        onAction = onAction,
+                        onNavToEditScreen = {
+                            onNavToEditQuizScreen()
+                        }
                     )
                     1->{
                         RaspberryPiQuizzesScreen(
@@ -158,7 +165,8 @@ private fun HomePreview() {
         HomeScreen(
             state = QuizState(localQuizzes = dummyQuizList),
             modifier = Modifier,
-            onAction = {}
+            onAction = {},
+            onNavToEditQuizScreen = {}
         )
     }
 }

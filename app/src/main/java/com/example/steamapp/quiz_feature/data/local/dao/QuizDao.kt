@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 interface QuizDao {
     //CREATE
     @Upsert
-    suspend fun insertQuiz(quiz:QuizEntity)
+    suspend fun insertQuiz(quiz:QuizEntity):Long
 
     @Upsert
     suspend fun insertQuestion(question: QuestionEntity)
@@ -36,6 +36,9 @@ interface QuizDao {
     //Update
     @Update
     suspend fun updateQuestion(question: QuestionEntity)
+
+    @Update
+    suspend fun updateQuiz(quiz: QuizEntity)
 
 
     //DELETE

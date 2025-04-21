@@ -12,9 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,13 +34,16 @@ import com.example.steamapp.quiz_feature.presentation.home.components.QuizCard
 import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyQuizzesScreen(
     modifier: Modifier= Modifier,
     state: QuizState,
-    onAction: (QuizActions)-> Unit
+    onAction: (QuizActions)-> Unit,
+    onNavToEditScreen: ()->Unit
 ) {
+
     if(state.isLoading){
         Column(
             modifier= modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
@@ -77,7 +84,13 @@ fun MyQuizzesScreen(
             items(state.localQuizzes){ quiz->
                 QuizCard(
                     quiz = quiz,
-                    onClick = {},
+                    onClick = {
+                        onAction(QuizActions.onLoadQuizData(it))
+                        onNavToEditScreen()
+                    },
+                    onDelete={
+                        onAction(QuizActions.onDeleteQuiz(quizId = quiz.quizId))
+                    },
                     onIconClick = {},
                     icon = R.drawable.push_to_raspberry_pi_icon
                 )
@@ -100,7 +113,8 @@ private fun MyQuizzesPreview() {
             state = QuizState(
                 localQuizzes = dummyQuizList
             ),
-            onAction = {}
+            onAction = {},
+            onNavToEditScreen = {}
         )
     }
 }

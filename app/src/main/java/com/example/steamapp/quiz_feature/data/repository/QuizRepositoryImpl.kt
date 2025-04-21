@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.map
 class QuizRepositoryImpl(
     private val dao: QuizDao
 ): QuizRepository {
-    override suspend fun insertQuiz(quiz: Quiz) {
-        dao.insertQuiz(quiz.toQuizEntity())
+    override suspend fun insertQuiz(quiz: Quiz): Long {
+        return dao.insertQuiz(quiz.toQuizEntity())
     }
 
     override suspend fun insertQuestion(question: Question) {
@@ -45,6 +45,10 @@ class QuizRepositoryImpl(
 
     override suspend fun updateQuestion(question: Question) {
         dao.updateQuestion(question.toQuestionEntity())
+    }
+
+    override suspend fun updateQuiz(quiz: Quiz) {
+        dao.updateQuiz(quiz = quiz.toQuizEntity())
     }
 
     override suspend fun deleteQuizWithQuestionsByQuizId(quizId: Long) {

@@ -4,8 +4,10 @@ import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +44,7 @@ import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
 import java.time.LocalDateTime
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun QuizCard(
@@ -49,6 +52,7 @@ fun QuizCard(
     quiz: Quiz,
     @DrawableRes icon: Int,
     onClick: (Long)-> Unit,
+    onDelete: ()->Unit,
     onIconClick: (Long)-> Unit
 ) {
     val date= quiz.lastUpdatedAt.toDateString()
@@ -59,7 +63,10 @@ fun QuizCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(130.dp)
-            .clickable { onClick(quiz.quizId) },
+            .combinedClickable(
+                onClick = {onClick(quiz.quizId)},
+                onLongClick = onDelete
+            ),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
@@ -142,7 +149,8 @@ private fun QuizCardPreview() {
             onClick = {},
             modifier = Modifier,
             onIconClick = {},
-            icon = R.drawable.push_to_raspberry_pi_icon
+            icon = R.drawable.push_to_raspberry_pi_icon,
+            onDelete = {}
         )
     }
 }

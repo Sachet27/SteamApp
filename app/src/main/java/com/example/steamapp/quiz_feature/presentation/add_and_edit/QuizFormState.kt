@@ -3,7 +3,11 @@ package com.example.steamapp.quiz_feature.presentation.add_and_edit
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 
 data class QuizFormState(
+    val isLoading: Boolean= false,
     val quizWithQuestions: QuizWithQuestions?= null,
+    val quizId: Long= 0L,
+    val quizTitle: String= "Untitled quiz",
+    val quizDescription: String?=null,
     val title: String= "",
     val optionA: String= "",
     val optionB: String= "",
