@@ -101,7 +101,7 @@ fun SteamAppTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> darkScheme
+        darkTheme -> lightScheme
         else -> lightScheme
     }
 
