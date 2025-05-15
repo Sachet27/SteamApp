@@ -45,8 +45,8 @@ class QuizViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     fun onAction(actions: QuizActions){
         when(actions){
-            is QuizActions.onAddQuiz -> { insertQuiz(actions.quiz) }
-            is QuizActions.onUpdateQuiz -> { updateQuiz(actions.quiz) }
+            is QuizActions.onInsertQuiz -> {insertQuiz(actions.quizWithQuestions)}
+            is QuizActions.onUpdateQuiz -> { updateQuiz(actions.quizWithQuestions) }
             is QuizActions.onChangeAnswerIndex -> {changeCorrectOptionIndex(actions.index)}
             is QuizActions.onChangeOptionA -> {changeOptionA(actions.newOptionA)}
             is QuizActions.onChangeOptionB -> {changeOptionB(actions.newOptionB)}
@@ -62,13 +62,9 @@ class QuizViewModel(
             }
             is QuizActions.onChangeQuizTitle -> {changeQuizTitle(actions.newQuizTitle)}
             is QuizActions.onChangeQuizDescription -> {changeQuizDescription(actions.newQuizDescription)}
-            is QuizActions.onInsertQuestion -> { insertQuestion(actions.question) }
             is QuizActions.onChangeQuestion -> {loadNextQuestion(actions.question)}
-            is QuizActions.onUpdateQuestion -> {updateQuestion(actions.question)}
             is QuizActions.onDeleteQuiz -> {deleteQuizWithQuestions(actions.quizId)}
-            QuizActions.onClearData -> {
-                clearData()
-            }
+            QuizActions.onClearData -> { clearData() }
         }
     }
 
@@ -101,7 +97,6 @@ class QuizViewModel(
                 if(quizWithQuestions.questions.isEmpty()){
                     _quizFormState.update {
                         it.copy(
-                            quizId = quizId,
                             isLoading = false,
                             quizWithQuestions = quizWithQuestions,
                         )
@@ -109,7 +104,6 @@ class QuizViewModel(
                 }else{
                     _quizFormState.update {
                         it.copy(
-                            quizId = quizId,
                             isLoading = false,
                             quizWithQuestions = quizWithQuestions,
                             title = quizWithQuestions.questions[0].title,
@@ -120,7 +114,6 @@ class QuizViewModel(
                             correctOptionIndex = quizWithQuestions.questions[0].correctOptionIndex,
                             imageRelativePath = quizWithQuestions.questions[0].imageRelativePath,
                             audioRelativePath = quizWithQuestions.questions[0].audioRelativePath,
-                            questionCount = quizWithQuestions.quiz.questionCount,
                             quizTitle = quizWithQuestions.quiz.title,
                             quizDescription = quizWithQuestions.quiz.description
                         )
@@ -129,27 +122,26 @@ class QuizViewModel(
             }
         }
 
-    private fun insertQuiz(quiz: Quiz){
+    private fun insertQuiz(quizWithQuestions: QuizWithQuestions){
         _quizFormState.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch(Dispatchers.IO) {
-            val quizId= repository.insertQuiz(quiz)
+            repository.insertQuizWithQuestions(quizWithQuestions)
             _quizFormState.update {
                 it.copy(
                     isLoading = false,
-                    quizId = quizId
                 )
             }
         }
     }
 
-    private fun updateQuiz(quiz: Quiz){
+    private fun updateQuiz(quizWithQuestions: QuizWithQuestions){
         _quizFormState.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch(Dispatchers.IO) {
-            repository.updateQuiz(quiz)
+            repository.updateQuizWithQuestions(quizWithQuestions)
             _quizFormState.update {
                 it.copy(
                     isLoading = false
@@ -158,31 +150,7 @@ class QuizViewModel(
         }
     }
 
-    private fun insertQuestion(question: Question){
-        _quizFormState.update{
-            it.copy(isLoading = true)
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertQuestion(question)
-            _quizFormState.update {
-                it.copy(isLoading = false)
-            }
-        }
-    }
-
-    private fun updateQuestion(question: Question){
-        _quizFormState.update{
-            it.copy(isLoading = true)
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.updateQuestion(question)
-            _quizFormState.update {
-                it.copy(isLoading = false)
-            }
-        }
-    }
-
-    private fun loadNextQuestion(question: Question){
+        private fun loadNextQuestion(question: Question){
          _quizFormState.update {
              it.copy(
                  title = question.title,
@@ -294,8 +262,7 @@ class QuizViewModel(
         _quizFormState.update {
             it.copy(
                 quizWithQuestions = null,
-                quizId = 0L,
-                quizTitle = "",
+                quizTitle = "Untitled quiz",
                 quizDescription = null,
                 title = "",
                 optionA = "",
@@ -305,7 +272,6 @@ class QuizViewModel(
                 correctOptionIndex = 0,
                 imageRelativePath =null,
                 audioRelativePath= null,
-                questionCount = 0
             )
         }
     }

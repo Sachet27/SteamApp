@@ -6,19 +6,12 @@ import com.example.steamapp.quiz_feature.domain.models.Quiz
 import kotlinx.coroutines.flow.Flow
 
 interface QuizRepository{
-    suspend fun insertQuiz(quiz: Quiz): Long
-    suspend fun insertQuestion(question: Question)
-    fun getAllQuizzes(): Flow<List<Quiz>>
-    fun getQuestionsByQuizId(quizId: Long): Flow<List<Question>>
+    suspend fun insertQuizWithQuestions(quizWithQuestions: QuizWithQuestions)
 
-    //add a model and mapper for this in domain
+    fun getAllQuizzes(): Flow<List<Quiz>>
     suspend fun getQuizWithQuestionsById(quizId: Long): QuizWithQuestions?
 
-    suspend fun updateQuestion(question: Question)
-    suspend fun updateQuiz(quiz: Quiz)
+    suspend fun updateQuizWithQuestions(quizWithQuestions: QuizWithQuestions)
 
     suspend fun deleteQuizWithQuestionsByQuizId(quizId: Long)
-    suspend fun deleteQuestionById(id: Long)
-    suspend fun deleteQuizById(quizId: Long)
-    suspend fun deleteQuestionsByQuizId(quizId: Long)
 }

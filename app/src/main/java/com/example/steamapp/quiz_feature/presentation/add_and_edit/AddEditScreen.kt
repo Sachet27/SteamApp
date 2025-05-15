@@ -1,7 +1,6 @@
 package com.example.steamapp.quiz_feature.presentation.add_and_edit
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +19,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,12 +30,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.steamapp.core.util.replace
+import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuestion
-import com.example.steamapp.quiz_feature.domain.mappers.toQuiz
-import com.example.steamapp.quiz_feature.domain.models.Question
-import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.components.AddEditQuizDialog
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.components.QuizEditTopBar
@@ -50,32 +49,78 @@ fun AddEditScreen(
     onAction: (QuizActions)-> Unit,
     onBackNav: ()-> Unit
 ) {
-    var questionCount by remember { mutableStateOf(state.questionCount) }
     var questionIndex by remember { mutableStateOf(0) }
+    var currentQuiz by remember { mutableStateOf(
+        state.quizWithQuestions
+            ?:QuizWithQuestions(
+                quiz = QuizEntity(
+                    quizId = 0L,
+                    title = "Untitled quiz",
+                    description = null,
+                    lastUpdatedAt = Instant.now(),
+                    questionCount = 0
+                ),
+                questions = emptyList()
+            )
+    ) }
     var showDialog by remember { mutableStateOf(true) }
-    val quiz= state.quizWithQuestions
-    Log.d("Error", quiz?.quiz.toString())
     Scaffold(
         topBar = {
             QuizEditTopBar(
                 title = state.quizTitle,
                 onSaveNote = {
-                    quiz?.let{
-                        val question= quiz.questions[questionIndex].toQuestion()
-                        onAction(QuizActions.onUpdateQuestion(
-                            question.copy(
+                    if(state.quizWithQuestions==null){
+                        if(currentQuiz.questions.isEmpty() || questionIndex >= currentQuiz.questions.size) {
+                            val newQuestion = QuestionEntity(
+                                id = 0L,
                                 title = state.title,
-                                options = listOf(state.optionA, state.optionB, state.optionC, state.optionD),
+                                options = listOf(
+                                    state.optionA,
+                                    state.optionB,
+                                    state.optionC,
+                                    state.optionD
+                                ),
                                 correctOptionIndex = state.correctOptionIndex,
                                 imageRelativePath = state.imageRelativePath,
                                 audioRelativePath = state.audioRelativePath,
-                                quizId = state.quizId
+                                quizId = currentQuiz.quiz.quizId
+                            )
+                            currentQuiz = currentQuiz.copy(
+                                questions = currentQuiz.questions + newQuestion
+                            )
+                        } else{
+                            val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                            currentQuiz= currentQuiz.copy(
+                                questions = replacedQuestionList
+                            )
+                        }
+                        onAction(QuizActions.onInsertQuiz(
+                            currentQuiz.copy(
+                                quiz = currentQuiz.quiz.copy(
+                                    questionCount = currentQuiz.questions.size
+                                )
+                            )
+                        ))
+                    } else{
+                        val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                        currentQuiz= currentQuiz.copy(
+                            questions = replacedQuestionList
+                        )
+                        onAction(QuizActions.onUpdateQuiz(
+                            currentQuiz.copy(
+                                quiz = currentQuiz.quiz.copy(
+                                   questionCount = currentQuiz.questions.size
+                                )
                             )
                         ))
                     }
-                    onBackNav()
                     onAction(QuizActions.onClearData)
+                    onBackNav()
                 },
+                onBackNav = {
+                    onAction(QuizActions.onClearData)
+                    onBackNav()
+                }
             )
         }
     ) {padding->
@@ -84,32 +129,21 @@ fun AddEditScreen(
                 state = state,
                 onAction = onAction,
                 onDismiss = {
-                    if (quiz == null) {
-                        onAction(QuizActions.onAddQuiz(
-                            Quiz(
-                                quizId = 0L,
-                                title = state.quizTitle,
-                                description = state.quizDescription,
-                                lastUpdatedAt = Instant.now(),
-                                questionCount = 0
-                            )
-                        ))
-                    } else {
-                        onAction(QuizActions.onUpdateQuiz(
-                            quiz.quiz.toQuiz().copy(
-                                title = state.quizTitle,
-                                description = state.quizDescription,
-                                lastUpdatedAt = Instant.now()
-                            )
-                        ))
-                    }
-                    showDialog = false
+                    currentQuiz= currentQuiz.copy(
+                        quiz = currentQuiz.quiz.copy(
+                            title = state.quizTitle,
+                            description = state.quizDescription
+                        )
+                    )
+                    showDialog=false
                 },
             )
         }
         if(state.isLoading){
             Column(
-                modifier= modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
+                modifier= modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -123,7 +157,10 @@ fun AddEditScreen(
         }
         else{
             Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
             ) {
                 Text(
                     text = "Question",
@@ -149,7 +186,9 @@ fun AddEditScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Column(
-                        modifier= Modifier.weight(0.5f).padding(8.dp)
+                        modifier= Modifier
+                            .weight(0.5f)
+                            .padding(8.dp)
                     ) {
                         Text(
                             text = "Option A:",
@@ -175,7 +214,9 @@ fun AddEditScreen(
                     }
 
                     Column(
-                        modifier= Modifier.weight(0.5f).padding(8.dp)
+                        modifier= Modifier
+                            .weight(0.5f)
+                            .padding(8.dp)
                     ) {
                         Text(
                             text = "Option B:",
@@ -235,7 +276,9 @@ fun AddEditScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
-                        modifier = Modifier.weight(0.5f).padding(8.dp),
+                        modifier = Modifier
+                            .weight(0.5f)
+                            .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -251,7 +294,9 @@ fun AddEditScreen(
                         }
                     }
                     Column(
-                        modifier = Modifier.weight(0.5f).padding(8.dp),
+                        modifier = Modifier
+                            .weight(0.5f)
+                            .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -270,52 +315,81 @@ fun AddEditScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        enabled = if(quiz==null) true else questionIndex<questionCount-1,
+                        enabled = questionIndex>0,
                         onClick = {
-                            if(quiz==null){
-                                onAction(QuizActions.onInsertQuestion(
-                                    Question(
+                            if(questionIndex== currentQuiz.questions.size){
+                                val newQuestion= QuestionEntity(
+                                    id = 0L,
+                                    title = state.title,
+                                    options = listOf(
+                                        state.optionA,
+                                        state.optionB,
+                                        state.optionC,
+                                        state.optionD
+                                    ),
+                                    correctOptionIndex = state.correctOptionIndex,
+                                    imageRelativePath = state.imageRelativePath,
+                                    audioRelativePath = state.audioRelativePath,
+                                    quizId = currentQuiz.quiz.quizId
+                                )
+                                currentQuiz= currentQuiz.copy(
+                                    questions = currentQuiz.questions+ newQuestion
+                                )
+                            } else{
+                                val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                                currentQuiz= currentQuiz.copy(
+                                    questions = replacedQuestionList
+                                )
+                            }
+                                --questionIndex
+                                onAction(QuizActions.onChangeQuestion(currentQuiz.questions[questionIndex].toQuestion()))
+                            },
+                    ) {
+                        Text(
+                            text = "Previous",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+
+                    Button(
+                        enabled = if(state.quizWithQuestions==null) true else questionIndex< currentQuiz.questions.size-1,
+                        onClick = {
+                                if(currentQuiz.questions.isEmpty() || questionIndex >= currentQuiz.questions.size){
+                                    val newQuestion= QuestionEntity(
                                         id = 0L,
                                         title = state.title,
-                                        options = listOf(state.optionA, state.optionB, state.optionC, state.optionD),
+                                        options = listOf(
+                                            state.optionA,
+                                            state.optionB,
+                                            state.optionC,
+                                            state.optionD
+                                        ),
                                         correctOptionIndex = state.correctOptionIndex,
                                         imageRelativePath = state.imageRelativePath,
                                         audioRelativePath = state.audioRelativePath,
-                                        quizId = state.quizId
+                                        quizId = currentQuiz.quiz.quizId
                                     )
-                                )
-                                )
-                                ++questionCount
-                                onAction(QuizActions.onUpdateQuiz(
-                                    Quiz(
-                                        quizId = state.quizId,
-                                        title = state.quizTitle,
-                                        description = state.quizDescription,
-                                        lastUpdatedAt = Instant.now(),
-                                        questionCount = questionCount
+                                    currentQuiz= currentQuiz.copy(
+                                        questions = currentQuiz.questions + newQuestion
                                     )
-                                )
-                                )
-                                onAction(QuizActions.onClearFormData)
-                            }else{
-                                val question= quiz.questions[questionIndex].toQuestion()
-                                onAction(QuizActions.onUpdateQuestion(
-                                    question.copy(
-                                        title = state.title,
-                                        options = listOf(state.optionA, state.optionB, state.optionC, state.optionD),
-                                        correctOptionIndex = state.correctOptionIndex,
-                                        imageRelativePath = state.imageRelativePath,
-                                        audioRelativePath = state.audioRelativePath,
-                                        quizId = state.quizId
+                                    questionIndex++
+                                    onAction(QuizActions.onClearFormData)
+                                     } else{
+                                    val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                                    currentQuiz= currentQuiz.copy(
+                                        questions = replacedQuestionList
                                     )
-                                )
-                                )
-                                questionIndex++
-                                onAction(QuizActions.onChangeQuestion(quiz.questions[questionIndex].toQuestion()))
-                            }
+                                    questionIndex++
+                                    if(questionIndex== currentQuiz.questions.size){
+                                        onAction(QuizActions.onClearFormData)
+                                    } else{
+                                        onAction(QuizActions.onChangeQuestion(currentQuiz.questions[questionIndex].toQuestion()))
+                                    }
+                                     }
                         },
                     ) {
                         Text(
@@ -324,13 +398,14 @@ fun AddEditScreen(
                             fontWeight = FontWeight.Normal
                         )
                     }
+
                 }
             }
 
         }
     }
-
 }
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview
@@ -355,3 +430,4 @@ private fun AddEditPreview() {
         )
     }
 }
+

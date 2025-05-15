@@ -5,7 +5,6 @@ import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQ
 data class QuizFormState(
     val isLoading: Boolean= false,
     val quizWithQuestions: QuizWithQuestions?= null,
-    val quizId: Long= 0L,
     val quizTitle: String= "Untitled quiz",
     val quizDescription: String?=null,
     val title: String= "",
@@ -15,6 +14,5 @@ data class QuizFormState(
     val optionD: String= "",
     val correctOptionIndex: Int=0,
     val imageRelativePath: String?= null,
-    val audioRelativePath: String?= null,
-    val questionCount: Int=0
+    val audioRelativePath: String?= null
 )

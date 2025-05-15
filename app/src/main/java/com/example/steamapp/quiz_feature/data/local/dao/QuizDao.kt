@@ -1,5 +1,6 @@
 package com.example.steamapp.quiz_feature.data.local.dao
 
+import android.view.Display
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
@@ -18,8 +19,18 @@ interface QuizDao {
     suspend fun insertQuiz(quiz:QuizEntity):Long
 
     @Upsert
-    suspend fun insertQuestion(question: QuestionEntity)
+    suspend fun insertQuestions(questions: List<QuestionEntity>)
 
+    @Transaction
+    suspend fun insertQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
+        val quizId= insertQuiz(quizWithQuestions.quiz)
+        val questions= quizWithQuestions.questions.map {
+            it.copy(
+                quizId = quizId
+            )
+        }
+        insertQuestions(questions)
+    }
 
     // READ
     @Query("SELECT * FROM QuizEntity")
@@ -34,11 +45,21 @@ interface QuizDao {
 
 
     //Update
-    @Update
-    suspend fun updateQuestion(question: QuestionEntity)
+    @Transaction
+    suspend fun updateQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
+        insertQuiz(quizWithQuestions.quiz)
 
-    @Update
-    suspend fun updateQuiz(quiz: QuizEntity)
+        deleteQuestionsByQuizId(quizWithQuestions.quiz.quizId)
+
+        val updatedQuestions= quizWithQuestions.questions.map {
+            it.copy(
+                quizId = quizWithQuestions.quiz.quizId
+            )
+        }
+        insertQuestions(updatedQuestions)
+    }
+
+
 
 
     //DELETE
@@ -48,13 +69,10 @@ interface QuizDao {
         deleteQuizById(quizId)
     }
 
-
-    @Query("DELETE FROM QuestionEntity WHERE id= :id")
-    suspend fun deleteQuestionById(id: Long)
-
     @Query("DELETE FROM QuizEntity WHERE quizId= :quizId")
     suspend fun deleteQuizById(quizId: Long)
 
     @Query("DELETE FROM QuestionEntity WHERE quizId= :quizId")
     suspend fun deleteQuestionsByQuizId(quizId: Long)
 }
+

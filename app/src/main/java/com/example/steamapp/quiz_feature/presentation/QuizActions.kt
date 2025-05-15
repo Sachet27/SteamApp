@@ -5,15 +5,13 @@ import com.example.steamapp.quiz_feature.domain.models.Question
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 
 sealed class QuizActions {
-    data class onDeleteQuiz(val quizId: Long): QuizActions()
     data class onChangeQuestion(val question: Question): QuizActions()
-    data class onInsertQuestion(val question: Question): QuizActions()
-    data class onUpdateQuestion(val question: Question): QuizActions()
+    data class onDeleteQuiz(val quizId: Long): QuizActions()
+    data class onInsertQuiz(val quizWithQuestions: QuizWithQuestions): QuizActions()
+    data class onUpdateQuiz(val quizWithQuestions: QuizWithQuestions): QuizActions()
     data class onLoadQuizData(val quizId: Long?): QuizActions()
     data object onClearData: QuizActions()
     data object onClearFormData: QuizActions()
-    data class onAddQuiz(val quiz: Quiz): QuizActions()
-    data class onUpdateQuiz(val quiz:Quiz): QuizActions()
     data class onChangeTitle(val newTitle: String): QuizActions()
     data class onChangeOptionA(val newOptionA: String): QuizActions()
     data class onChangeOptionB(val newOptionB: String): QuizActions()
