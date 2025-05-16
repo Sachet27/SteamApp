@@ -2,6 +2,7 @@ package com.example.steamapp.quiz_feature.domain.mappers
 
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
+import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Question
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 
@@ -48,3 +49,4 @@ fun QuestionEntity.toQuestion(): Question{
         quizId = quizId
     )
 }
+

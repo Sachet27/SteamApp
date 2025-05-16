@@ -12,8 +12,8 @@ class QuizRepositoryImpl(
     private val dao: QuizDao
 ): QuizRepository {
 
-    override suspend fun insertQuizWithQuestions(quizWithQuestions: QuizWithQuestions) {
-        dao.insertQuizWithQuestions(quizWithQuestions)
+    override suspend fun insertQuizWithQuestions(quizWithQuestions: QuizWithQuestions):Long {
+        return dao.insertQuizWithQuestions(quizWithQuestions)
     }
 
     override fun getAllQuizzes(): Flow<List<Quiz>> {

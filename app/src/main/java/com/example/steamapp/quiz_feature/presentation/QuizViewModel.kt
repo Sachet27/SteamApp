@@ -1,16 +1,18 @@
 package com.example.steamapp.quiz_feature.presentation
 
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.steamapp.quiz_feature.data.internal_storage.FileManager
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Question
-import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.domain.repository.QuizRepository
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.QuizFormState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +24,8 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 
 class QuizViewModel(
-    private val repository: QuizRepository
+    private val repository: QuizRepository,
+    private val fileManager: FileManager
 ): ViewModel() {
     private val _quizState= MutableStateFlow(QuizState())
     val quizState: StateFlow<QuizState> = _quizState
@@ -63,8 +66,25 @@ class QuizViewModel(
             is QuizActions.onChangeQuizTitle -> {changeQuizTitle(actions.newQuizTitle)}
             is QuizActions.onChangeQuizDescription -> {changeQuizDescription(actions.newQuizDescription)}
             is QuizActions.onChangeQuestion -> {loadNextQuestion(actions.question)}
-            is QuizActions.onDeleteQuiz -> {deleteQuizWithQuestions(actions.quizId)}
+            is QuizActions.onDeleteQuiz -> {deleteQuizWithQuestions(actions.quizId, actions.quizName)}
             QuizActions.onClearData -> { clearData() }
+        }
+    }
+
+
+    fun saveMediaInInternalStorage(uri: Uri, quizName: String, questionId: Long){
+        _quizFormState.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            fileManager.saveImageOrAudio(
+                uri = uri,
+                quizName = quizName,
+                questionId = questionId
+            )
+        _quizFormState.update {
+            it.copy(isLoading = false)
+        }
         }
     }
 
@@ -127,7 +147,9 @@ class QuizViewModel(
             it.copy(isLoading = true)
         }
         viewModelScope.launch(Dispatchers.IO) {
-            repository.insertQuizWithQuestions(quizWithQuestions)
+            val quizId= async {  repository.insertQuizWithQuestions(quizWithQuestions)}.await()
+            fileManager.saveJson(quizWithQuestions)
+            fileManager.prefixWithQuizId(quizId = quizId, quizName = quizWithQuestions.quiz.title)
             _quizFormState.update {
                 it.copy(
                     isLoading = false,
@@ -165,11 +187,12 @@ class QuizViewModel(
          }
     }
 
-    private fun deleteQuizWithQuestions(quizId: Long){
+    private fun deleteQuizWithQuestions(quizId: Long, quizName:String){
         _quizState.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch(Dispatchers.IO) {
+            fileManager.deleteFolderContents(quizName = quizName)
             repository.deleteQuizWithQuestionsByQuizId(quizId)
             _quizState.update {
                 it.copy(

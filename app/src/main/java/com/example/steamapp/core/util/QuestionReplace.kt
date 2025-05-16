@@ -25,3 +25,11 @@ fun List<QuestionEntity>.replace(targetIndex: Int, state: QuizFormState): List<Q
         }
     }
 }
+
+fun String.formatQuizName(): String{
+    return this.replace(" ", "_")
+}
+
+fun String.toRawQuizName():String{
+    return this.replace("_", " ")
+}

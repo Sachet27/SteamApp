@@ -2,7 +2,9 @@ package com.example.steamapp.quiz_feature.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity
 data class QuestionEntity(
     @PrimaryKey(autoGenerate = true)

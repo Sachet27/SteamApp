@@ -102,7 +102,9 @@ fun RaspberryPiQuizzesScreen(
                     onClick = {},
                     onIconClick = {},
                     icon = R.drawable.presentation_icon,
-                    onDelete = {onAction(QuizActions.onDeleteQuiz(quizId = quiz.quizId))}
+                    onDelete = {
+                        //lets see what "deleting" means for raspberry pi quizzes
+                    }
                 )
             }
         }

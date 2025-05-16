@@ -6,7 +6,7 @@ import com.example.steamapp.quiz_feature.domain.models.Quiz
 
 sealed class QuizActions {
     data class onChangeQuestion(val question: Question): QuizActions()
-    data class onDeleteQuiz(val quizId: Long): QuizActions()
+    data class onDeleteQuiz(val quizId: Long, val quizName: String): QuizActions()
     data class onInsertQuiz(val quizWithQuestions: QuizWithQuestions): QuizActions()
     data class onUpdateQuiz(val quizWithQuestions: QuizWithQuestions): QuizActions()
     data class onLoadQuizData(val quizId: Long?): QuizActions()

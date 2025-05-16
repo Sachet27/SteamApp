@@ -1,6 +1,9 @@
 package com.example.steamapp.quiz_feature.presentation.add_and_edit
 
+import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +22,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,7 +49,8 @@ fun AddEditScreen(
     modifier: Modifier= Modifier,
     state: QuizFormState,
     onAction: (QuizActions)-> Unit,
-    onBackNav: ()-> Unit
+    onBackNav: ()-> Unit,
+    onStoreMedia: (contentUri: Uri, quizName: String, questionId: Long)->Unit
 ) {
     var questionIndex by remember { mutableStateOf(0) }
     var currentQuiz by remember { mutableStateOf(
@@ -64,6 +67,16 @@ fun AddEditScreen(
             )
     ) }
     var showDialog by remember { mutableStateOf(true) }
+
+    val imageAudioPicker= rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = {contentUri->
+            contentUri?.let {
+                onStoreMedia(contentUri, currentQuiz.quiz.title, (questionIndex+1).toLong())
+            }
+        }
+    )
+
     Scaffold(
         topBar = {
             QuizEditTopBar(
@@ -288,7 +301,9 @@ fun AddEditScreen(
                         )
                         Spacer(Modifier.height(4.dp))
                         Button(
-                            onClick = {}
+                            onClick = {
+                                imageAudioPicker.launch("image/*")
+                            }
                         ) {
                             Text("Upload")
                         }
@@ -306,7 +321,9 @@ fun AddEditScreen(
                         )
                         Spacer(Modifier.height(4.dp))
                         Button(
-                            onClick = {}
+                            onClick = {
+                                imageAudioPicker.launch("audio/*")
+                            }
                         ) {
                             Text("Upload")
                         }
@@ -426,7 +443,10 @@ private fun AddEditPreview() {
                 )
             ),
             onAction = {},
-            onBackNav = {}
+            onBackNav = {},
+            onStoreMedia = {contentUri, quizName, questionId ->
+
+            }
         )
     }
 }

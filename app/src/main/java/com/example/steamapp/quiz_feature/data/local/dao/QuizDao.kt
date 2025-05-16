@@ -22,7 +22,7 @@ interface QuizDao {
     suspend fun insertQuestions(questions: List<QuestionEntity>)
 
     @Transaction
-    suspend fun insertQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
+    suspend fun insertQuizWithQuestions(quizWithQuestions: QuizWithQuestions): Long{
         val quizId= insertQuiz(quizWithQuestions.quiz)
         val questions= quizWithQuestions.questions.map {
             it.copy(
@@ -30,6 +30,7 @@ interface QuizDao {
             )
         }
         insertQuestions(questions)
+        return quizId
     }
 
     // READ

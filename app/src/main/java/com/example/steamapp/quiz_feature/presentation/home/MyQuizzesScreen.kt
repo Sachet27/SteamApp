@@ -89,7 +89,7 @@ fun MyQuizzesScreen(
                         onNavToEditScreen()
                     },
                     onDelete={
-                        onAction(QuizActions.onDeleteQuiz(quizId = quiz.quizId))
+                        onAction(QuizActions.onDeleteQuiz(quizId = quiz.quizId, quizName = quiz.title))
                     },
                     onIconClick = {},
                     icon = R.drawable.push_to_raspberry_pi_icon

@@ -4,14 +4,10 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
-import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.QuizViewModel
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.AddEditScreen
 import com.example.steamapp.quiz_feature.presentation.home.HomeScreen
@@ -40,6 +36,9 @@ fun AppNavHost() {
                 onAction = quizViewModel::onAction,
                 onBackNav = {
                     navController.popBackStack()
+                },
+                onStoreMedia = { contentUri, quizName, questionId->
+                    quizViewModel.saveMediaInInternalStorage(contentUri, quizName, questionId)
                 }
             )
         }
