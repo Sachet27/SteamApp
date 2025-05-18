@@ -79,7 +79,7 @@ class QuizViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             fileManager.saveImageOrAudio(
                 uri = uri,
-                quizName = quizName,
+                rawQuizName = quizName,
                 questionId = questionId
             )
         _quizFormState.update {
@@ -149,7 +149,7 @@ class QuizViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val quizId= async {  repository.insertQuizWithQuestions(quizWithQuestions)}.await()
             fileManager.saveJson(quizWithQuestions)
-            fileManager.prefixWithQuizId(quizId = quizId, quizName = quizWithQuestions.quiz.title)
+            fileManager.prefixWithQuizId(quizId = quizId, rawQuizName = quizWithQuestions.quiz.title)
             _quizFormState.update {
                 it.copy(
                     isLoading = false,
@@ -192,7 +192,7 @@ class QuizViewModel(
             it.copy(isLoading = true)
         }
         viewModelScope.launch(Dispatchers.IO) {
-            fileManager.deleteFolderContents(quizName = quizName)
+            fileManager.deleteFolderContents(rawQuizName = quizName)
             repository.deleteQuizWithQuestionsByQuizId(quizId)
             _quizState.update {
                 it.copy(
