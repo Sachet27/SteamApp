@@ -1,9 +1,10 @@
 package com.example.steamapp.core.util
 
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
+import com.example.steamapp.quiz_feature.presentation.add_and_edit.MediaState
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.QuizFormState
 
-fun List<QuestionEntity>.replace(targetIndex: Int, state: QuizFormState): List<QuestionEntity>{
+fun List<QuestionEntity>.replace(targetIndex: Int, state: QuizFormState, mediaState: MediaState): List<QuestionEntity>{
     return this.mapIndexed { index, question ->
         if(index== targetIndex){
             question.copy(
@@ -16,9 +17,9 @@ fun List<QuestionEntity>.replace(targetIndex: Int, state: QuizFormState): List<Q
                     state.optionD
                 ),
                 correctOptionIndex = state.correctOptionIndex,
-                imageRelativePath = state.imageRelativePath,
-                audioRelativePath = state.audioRelativePath,
-                quizId = question.quizId
+                quizId = question.quizId,
+                imageRelativePath = mediaState.imageRelativePath,
+                audioRelativePath = mediaState.audioRelativePath
             )
         } else{
             question
@@ -32,4 +33,14 @@ fun String.formatQuizName(): String{
 
 fun String.toRawQuizName():String{
     return this.replace("_", " ")
+}
+
+fun getRelativePath(quizPath: String): String{
+    if(quizPath.contains("quizzes/")){
+        val index= quizPath.indexOf("quizzes/")
+        return quizPath.substring(index, quizPath.length)
+    }
+    else {
+        return quizPath
+    }
 }

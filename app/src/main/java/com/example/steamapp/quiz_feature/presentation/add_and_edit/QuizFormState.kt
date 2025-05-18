@@ -13,6 +13,4 @@ data class QuizFormState(
     val optionC: String= "",
     val optionD: String= "",
     val correctOptionIndex: Int=0,
-    val imageRelativePath: String?= null,
-    val audioRelativePath: String?= null
 )

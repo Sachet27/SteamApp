@@ -5,11 +5,13 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.steamapp.core.util.getRelativePath
 import com.example.steamapp.quiz_feature.data.internal_storage.FileManager
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Question
 import com.example.steamapp.quiz_feature.domain.repository.QuizRepository
+import com.example.steamapp.quiz_feature.presentation.add_and_edit.MediaState
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.QuizFormState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -27,6 +29,14 @@ class QuizViewModel(
     private val repository: QuizRepository,
     private val fileManager: FileManager
 ): ViewModel() {
+
+    private val _mediaState= MutableStateFlow(MediaState())
+    val mediaState= _mediaState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        MediaState()
+    )
+
     private val _quizState= MutableStateFlow(QuizState())
     val quizState: StateFlow<QuizState> = _quizState
         .onStart {
@@ -72,18 +82,36 @@ class QuizViewModel(
     }
 
 
-    fun saveMediaInInternalStorage(uri: Uri, quizName: String, questionId: Long){
+    fun saveMediaInInternalStorage(uri: Uri, quizName: String, questionId: Long, quizId: Long){
         _quizFormState.update {
             it.copy(isLoading = true)
         }
+        _mediaState.update {
+            it.copy(isUploading = true)
+        }
         viewModelScope.launch(Dispatchers.IO) {
-            fileManager.saveImageOrAudio(
+            val filePath= fileManager.saveImageOrAudio(
                 uri = uri,
                 rawQuizName = quizName,
-                questionId = questionId
+                questionId = questionId,
+                quizId = quizId
             )
+            val relativePath= getRelativePath(filePath)
         _quizFormState.update {
             it.copy(isLoading = false)
+        }
+        _mediaState.update {
+            if(filePath.contains("image.")) {
+                it.copy(
+                    imageRelativePath = relativePath,
+                    isUploading = false
+                )
+            } else{
+                it.copy(
+                    audioRelativePath = relativePath,
+                    isUploading = false
+                )
+            }
         }
         }
     }
@@ -132,10 +160,14 @@ class QuizViewModel(
                             optionC = quizWithQuestions.questions[0].options[2],
                             optionD = quizWithQuestions.questions[0].options[3],
                             correctOptionIndex = quizWithQuestions.questions[0].correctOptionIndex,
-                            imageRelativePath = quizWithQuestions.questions[0].imageRelativePath,
-                            audioRelativePath = quizWithQuestions.questions[0].audioRelativePath,
                             quizTitle = quizWithQuestions.quiz.title,
                             quizDescription = quizWithQuestions.quiz.description
+                        )
+                    }
+                    _mediaState.update {
+                        it.copy(
+                            audioRelativePath = quizWithQuestions.questions[0].audioRelativePath,
+                            imageRelativePath = quizWithQuestions.questions[0].imageRelativePath
                         )
                     }
                 }
@@ -164,6 +196,7 @@ class QuizViewModel(
         }
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateQuizWithQuestions(quizWithQuestions)
+            fileManager.saveJson(quizWithQuestions)
             _quizFormState.update {
                 it.copy(
                     isLoading = false
@@ -181,10 +214,14 @@ class QuizViewModel(
                  optionC = question.options[2],
                  optionD = question.options[3],
                  correctOptionIndex = question.correctOptionIndex,
-                 imageRelativePath = question.imageRelativePath,
-                 audioRelativePath = question.audioRelativePath
              )
          }
+            _mediaState.update {
+                it.copy(
+                    imageRelativePath = question.imageRelativePath,
+                    audioRelativePath = question.audioRelativePath
+                )
+            }
     }
 
     private fun deleteQuizWithQuestions(quizId: Long, quizName:String){
@@ -275,8 +312,13 @@ class QuizViewModel(
                 optionC = "",
                 optionD = "",
                 correctOptionIndex = 0,
-                imageRelativePath =null,
-                audioRelativePath= null,
+            )
+        }
+        _mediaState.update {
+            it.copy(
+                imageRelativePath = null,
+                audioRelativePath = null,
+                isUploading = false,
             )
         }
         }
@@ -293,9 +335,14 @@ class QuizViewModel(
                 optionC = "",
                 optionD = "",
                 correctOptionIndex = 0,
-                imageRelativePath =null,
-                audioRelativePath= null,
+            )
+        }
+        _mediaState.update {
+            it.copy(
+                imageRelativePath = null,
+                audioRelativePath = null,
+                isUploading = false,
             )
         }
     }
-    }
+}

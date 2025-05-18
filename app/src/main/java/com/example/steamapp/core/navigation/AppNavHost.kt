@@ -17,6 +17,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AppNavHost() {
     val quizViewModel: QuizViewModel= koinViewModel()
+    val mediaState by quizViewModel.mediaState.collectAsStateWithLifecycle()
     val quizState by quizViewModel.quizState.collectAsStateWithLifecycle()
     val quizFormState by quizViewModel.quizFormState.collectAsStateWithLifecycle()
     val navController= rememberNavController()
@@ -37,9 +38,10 @@ fun AppNavHost() {
                 onBackNav = {
                     navController.popBackStack()
                 },
-                onStoreMedia = { contentUri, quizName, questionId->
-                    quizViewModel.saveMediaInInternalStorage(contentUri, quizName, questionId)
-                }
+                onStoreMedia = { contentUri, quizName, questionId, quizId ->
+                    quizViewModel.saveMediaInInternalStorage(contentUri, quizName, questionId, quizId)
+                },
+                mediaState = mediaState
             )
         }
     }

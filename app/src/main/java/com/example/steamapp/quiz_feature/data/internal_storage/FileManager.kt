@@ -17,18 +17,19 @@ import java.util.zip.ZipOutputStream
 class FileManager(
     private val context: Context
 ){
-    fun saveImageOrAudio(uri: Uri, rawQuizName: String, questionId: Long){
-        val quizName= rawQuizName.formatQuizName()
+    fun saveImageOrAudio(uri: Uri, rawQuizName: String, questionId: Long, quizId: Long):String{
+        val quizName= if(quizId==0L) rawQuizName.formatQuizName() else updateFolderName(quizId = quizId, rawQuizName = rawQuizName)
         val bytes= context.contentResolver.openInputStream(uri)?.use{ inputStream->
             inputStream.readBytes()
         }?: byteArrayOf()
 
         val mimeType= context.contentResolver.getType(uri)?:""
-        val name= when{
+        var name= when{
             mimeType.startsWith("image/")-> "${questionId}_image"
             mimeType.startsWith("audio/")-> "${questionId}_audio"
             else-> ""
-        }
+         }
+        if(quizId!=0L) name= "${quizId}_${name}"
         val extension= MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
         val fullFileName= "${name}.${extension}"
         val quizFolder= File(context.filesDir, "/quizzes/$quizName")
@@ -36,20 +37,54 @@ class FileManager(
             quizFolder.mkdirs()
         }
         val file= File(quizFolder , fullFileName)
+        if(file.exists()){
+            if(!deleteFile(file)){
+                throw IOException("Failed to delete existing media files before deleting")
+            }
+        }
         FileOutputStream(file).use { outputStream->
             outputStream.write(bytes)
         }
+        return file.absolutePath
     }
 
     fun saveJson(quizWithQuestions: QuizWithQuestions){
-        val quizName= quizWithQuestions.quiz.title.formatQuizName()
+        val quizName= if(quizWithQuestions.quiz.quizId== 0L)
+            quizWithQuestions.quiz.title.formatQuizName()
+        else updateFolderName(quizId = quizWithQuestions.quiz.quizId, rawQuizName = quizWithQuestions.quiz.title)
+
         val quizJsonString= Json.encodeToString(QuizWithQuestions.serializer() ,quizWithQuestions)
         val folder= File(context.filesDir, "/quizzes/${quizName}")
         if(!folder.exists()){
             folder.mkdirs()
         }
         val jsonFile= File(folder, "questions.json")
+        if(jsonFile.exists()){
+            if(!deleteFile(jsonFile)){
+                throw IOException("Failed to delete existing file before replacing")
+            }
+        }
         jsonFile.writeText(quizJsonString)
+    }
+
+    private fun updateFolderName(quizId: Long, rawQuizName: String): String{
+        val parentFolder= File(context.filesDir, "quizzes")
+        val newFolderName= "${quizId}_${rawQuizName.formatQuizName()}"
+        val newFolder= File(parentFolder, newFolderName)
+        val oldFolder= parentFolder.listFiles()?.find {file->
+            file.name.startsWith("${quizId}_")
+        }
+        if(oldFolder==null){
+            return rawQuizName.formatQuizName()
+        } else{
+            if( !oldFolder.exists() || !oldFolder.isDirectory() ){
+                throw IOException("The existing file is not a directory")
+            }
+            if(!oldFolder.renameTo(newFolder)){
+                throw IOException("Failed to rename the folder")
+            }
+            return newFolderName
+        }
     }
 
     fun zipFolder(rawQuizName: String){
@@ -100,7 +135,19 @@ class FileManager(
                 if(!file.renameTo(updatedFile)) throw IOException("File couldn't be renamed")
             }
         }
+        appendQuizFolderWithQuizId(rawQuizName, quizId)
     }
+
+    private fun appendQuizFolderWithQuizId(rawQuizName: String, quizId: Long){
+        val quizName= rawQuizName.formatQuizName()
+        val folder= File(context.filesDir, "quizzes/$quizName")
+        if(!folder.exists() || !folder.isDirectory) return
+        val parentFolder= File(context.filesDir, "quizzes")
+        val newFolderName= "${quizId}_${quizName}"
+        val updatedFolder= File(parentFolder, newFolderName)
+        if(!folder.renameTo(updatedFolder)) throw IOException("Folder couldn't be renamed")
+    }
+
 
     fun deleteFolderContents(rawQuizName: String): Boolean{
         val quizName= rawQuizName.formatQuizName()
@@ -115,11 +162,17 @@ class FileManager(
     }
 
     private fun deleteFile(file: File):Boolean{
-        if(file.isDirectory){
-            file.listFiles()?.forEach { child->
+    return try {
+        if (file.isDirectory) {
+            file.listFiles()?.forEach { child ->
                 deleteFile(child)
             }
         }
-        return file.delete()
+        file.delete()
+    } catch (e: Exception){
+        e.printStackTrace()
+        false
     }
+    }
+
 }

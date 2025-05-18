@@ -48,9 +48,10 @@ import java.time.Instant
 fun AddEditScreen(
     modifier: Modifier= Modifier,
     state: QuizFormState,
+    mediaState: MediaState,
     onAction: (QuizActions)-> Unit,
     onBackNav: ()-> Unit,
-    onStoreMedia: (contentUri: Uri, quizName: String, questionId: Long)->Unit
+    onStoreMedia: (contentUri: Uri, quizName: String, questionId: Long, quizId: Long)->Unit
 ) {
     var questionIndex by remember { mutableStateOf(0) }
     var currentQuiz by remember { mutableStateOf(
@@ -72,7 +73,8 @@ fun AddEditScreen(
         contract = ActivityResultContracts.GetContent(),
         onResult = {contentUri->
             contentUri?.let {
-                onStoreMedia(contentUri, currentQuiz.quiz.title, (questionIndex+1).toLong())
+                onStoreMedia(contentUri, currentQuiz.quiz.title, (questionIndex+1).toLong(), currentQuiz.quiz.quizId)
+
             }
         }
     )
@@ -94,15 +96,15 @@ fun AddEditScreen(
                                     state.optionD
                                 ),
                                 correctOptionIndex = state.correctOptionIndex,
-                                imageRelativePath = state.imageRelativePath,
-                                audioRelativePath = state.audioRelativePath,
+                                imageRelativePath = mediaState.imageRelativePath,
+                                audioRelativePath = mediaState.audioRelativePath,
                                 quizId = currentQuiz.quiz.quizId
                             )
                             currentQuiz = currentQuiz.copy(
                                 questions = currentQuiz.questions + newQuestion
                             )
                         } else{
-                            val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                            val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state, mediaState)
                             currentQuiz= currentQuiz.copy(
                                 questions = replacedQuestionList
                             )
@@ -115,7 +117,7 @@ fun AddEditScreen(
                             )
                         ))
                     } else{
-                        val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                        val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state, mediaState)
                         currentQuiz= currentQuiz.copy(
                             questions = replacedQuestionList
                         )
@@ -300,6 +302,17 @@ fun AddEditScreen(
                             fontSize = 18.sp
                         )
                         Spacer(Modifier.height(4.dp))
+                        if(mediaState.isUploading){
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        if(mediaState.imageRelativePath!=null){
+                                Text(
+                                    text = "Relative path: ${mediaState.imageRelativePath}",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(Modifier.height(4.dp))
+                        }
                         Button(
                             onClick = {
                                 imageAudioPicker.launch("image/*")
@@ -319,6 +332,17 @@ fun AddEditScreen(
                             style = MaterialTheme.typography.headlineSmall,
                             fontSize = 18.sp
                         )
+                        if(mediaState.isUploading){
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        if(mediaState.audioRelativePath!=null){
+                            Text(
+                                text = "Relative path: ${mediaState.audioRelativePath}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Spacer(Modifier.height(4.dp))
+                        }
                         Spacer(Modifier.height(4.dp))
                         Button(
                             onClick = {
@@ -348,15 +372,15 @@ fun AddEditScreen(
                                         state.optionD
                                     ),
                                     correctOptionIndex = state.correctOptionIndex,
-                                    imageRelativePath = state.imageRelativePath,
-                                    audioRelativePath = state.audioRelativePath,
+                                    imageRelativePath = mediaState.imageRelativePath,
+                                    audioRelativePath = mediaState.audioRelativePath,
                                     quizId = currentQuiz.quiz.quizId
                                 )
                                 currentQuiz= currentQuiz.copy(
                                     questions = currentQuiz.questions+ newQuestion
                                 )
                             } else{
-                                val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                                val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state, mediaState)
                                 currentQuiz= currentQuiz.copy(
                                     questions = replacedQuestionList
                                 )
@@ -386,8 +410,8 @@ fun AddEditScreen(
                                             state.optionD
                                         ),
                                         correctOptionIndex = state.correctOptionIndex,
-                                        imageRelativePath = state.imageRelativePath,
-                                        audioRelativePath = state.audioRelativePath,
+                                        imageRelativePath = mediaState.imageRelativePath,
+                                        audioRelativePath = mediaState.audioRelativePath,
                                         quizId = currentQuiz.quiz.quizId
                                     )
                                     currentQuiz= currentQuiz.copy(
@@ -396,7 +420,7 @@ fun AddEditScreen(
                                     questionIndex++
                                     onAction(QuizActions.onClearFormData)
                                      } else{
-                                    val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state)
+                                    val replacedQuestionList= currentQuiz.questions.replace(questionIndex, state, mediaState)
                                     currentQuiz= currentQuiz.copy(
                                         questions = replacedQuestionList
                                     )
@@ -444,9 +468,10 @@ private fun AddEditPreview() {
             ),
             onAction = {},
             onBackNav = {},
-            onStoreMedia = {contentUri, quizName, questionId ->
+            onStoreMedia = { contentUri, quizName, questionId , quizId->
 
-            }
+            },
+            mediaState = MediaState()
         )
     }
 }
