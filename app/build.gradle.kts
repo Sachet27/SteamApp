@@ -21,12 +21,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/api/\"")
+            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/api/\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/api/\"")
+            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/api/\"")
         }
     }
     compileOptions {
@@ -37,6 +43,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig= true
         compose = true
     }
 }
