@@ -1,4 +1,4 @@
-package com.example.steamapp.quiz_feature.data.internal_storage.converters
+package com.example.steamapp.core.data.internal_storage.converters
 
 import android.os.Build
 import androidx.annotation.RequiresApi

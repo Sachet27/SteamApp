@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.steamapp.api.presentation.APIViewModel
 import com.example.steamapp.quiz_feature.presentation.QuizViewModel
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.AddEditScreen
 import com.example.steamapp.quiz_feature.presentation.home.HomeScreen
@@ -16,6 +17,7 @@ import org.koin.androidx.compose.koinViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavHost() {
+    val apiViewModel:APIViewModel = koinViewModel()
     val quizViewModel: QuizViewModel= koinViewModel()
     val mediaState by quizViewModel.mediaState.collectAsStateWithLifecycle()
     val quizState by quizViewModel.quizState.collectAsStateWithLifecycle()

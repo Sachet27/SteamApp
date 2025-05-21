@@ -22,8 +22,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/api/\"")
-            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/api/\"")
+            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/\"")
+            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/\"")
         }
         release {
             isMinifyEnabled = false
@@ -31,8 +31,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/api/\"")
-            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/api/\"")
+            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/\"")
+            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/\"")
         }
     }
     compileOptions {

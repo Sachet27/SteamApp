@@ -1,22 +1,47 @@
-package com.example.steamapp.quiz_feature.data.internal_storage
+package com.example.steamapp.core.data.internal_storage
 
 import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.core.util.formatQuizName
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import kotlinx.serialization.json.Json
+import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 class FileManager(
     private val context: Context
 ){
+    fun getFileInfo(quizId: Long, rawQuizName: String): FileInfo{
+        val fileName= "$quizId-${rawQuizName.formatQuizName()}"
+        val fullFileName= "${fileName}.zip"
+
+        val folder= File(context.filesDir, "zips")
+        if(!folder.exists() || !folder.isDirectory) throw IOException("Folder doesn't exist")
+
+        val zipFile= File(folder, fullFileName)
+        if(!zipFile.exists() || !zipFile.isFile) throw IOException("The zip file couldn't be created.")
+
+        val mimeType= MimeTypeMap.getSingleton().getMimeTypeFromExtension(zipFile.extension)?:""
+        val bytes= BufferedInputStream(FileInputStream(zipFile)).use {inputStream->
+            inputStream.readBytes()
+        }
+
+        return FileInfo(
+            name = fileName,
+            mimeType = mimeType,
+            bytes = bytes
+        )
+    }
+
     fun saveImageOrAudio(uri: Uri, rawQuizName: String, questionId: Long, quizId: Long):String{
         val quizName= if(quizId==0L) rawQuizName.formatQuizName() else updateFolderName(quizId = quizId, rawQuizName = rawQuizName)
         val bytes= context.contentResolver.openInputStream(uri)?.use{ inputStream->
@@ -52,7 +77,6 @@ class FileManager(
         val quizName= if(quizWithQuestions.quiz.quizId== 0L)
             quizWithQuestions.quiz.title.formatQuizName()
         else updateFolderName(quizId = quizWithQuestions.quiz.quizId, rawQuizName = quizWithQuestions.quiz.title)
-
         val quizJsonString= Json.encodeToString(QuizWithQuestions.serializer() ,quizWithQuestions)
         val folder= File(context.filesDir, "/quizzes/${quizName}")
         if(!folder.exists()){
@@ -69,10 +93,10 @@ class FileManager(
 
     private fun updateFolderName(quizId: Long, rawQuizName: String): String{
         val parentFolder= File(context.filesDir, "quizzes")
-        val newFolderName= "${quizId}_${rawQuizName.formatQuizName()}"
+        val newFolderName= "${quizId}-${rawQuizName.formatQuizName()}"
         val newFolder= File(parentFolder, newFolderName)
         val oldFolder= parentFolder.listFiles()?.find {file->
-            file.name.startsWith("${quizId}_")
+            file.name.startsWith("${quizId}-")
         }
         if(oldFolder==null){
             return rawQuizName.formatQuizName()
@@ -90,7 +114,7 @@ class FileManager(
     fun zipFolder(rawQuizName: String){
         val quizName= rawQuizName.formatQuizName()
         val folderToZip= File("${context.filesDir}/quizzes/$quizName")
-        val zipFolder= File(context.filesDir, "/zips")
+        val zipFolder= File(context.filesDir, "zips")
         if(!zipFolder.exists()){
             zipFolder.mkdir()
         }
@@ -143,7 +167,7 @@ class FileManager(
         val folder= File(context.filesDir, "quizzes/$quizName")
         if(!folder.exists() || !folder.isDirectory) return
         val parentFolder= File(context.filesDir, "quizzes")
-        val newFolderName= "${quizId}_${quizName}"
+        val newFolderName= "${quizId}-${quizName}"
         val updatedFolder= File(parentFolder, newFolderName)
         if(!folder.renameTo(updatedFolder)) throw IOException("Folder couldn't be renamed")
     }
@@ -162,8 +186,8 @@ class FileManager(
     }
 
     private fun deleteFile(file: File):Boolean{
-    return try {
-        if (file.isDirectory) {
+        return try {
+            if (file.isDirectory) {
             file.listFiles()?.forEach { child ->
                 deleteFile(child)
             }
