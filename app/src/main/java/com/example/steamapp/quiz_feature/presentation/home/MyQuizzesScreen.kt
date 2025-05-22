@@ -6,20 +6,15 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +50,9 @@ fun MyQuizzesScreen(
 ) {
     val context= LocalContext.current
     var showUploadDialog by remember { mutableStateOf(false) }
+    var pushedQuizId by remember { mutableStateOf<Long?>(null) }
+    var pushedQuizName by remember { mutableStateOf<String?>(null) }
+
     if(showUploadDialog){
         UploadDialogBox(
             uploadState = uploadState,
@@ -66,19 +64,21 @@ fun MyQuizzesScreen(
             },
             onDone = {
                 showUploadDialog= false
-                state.pushedQuiz?.let {
-                    onAction(QuizActions.onDeleteQuiz(
-                        quizId = state.pushedQuiz.quiz.quizId,
-                        quizName = state.pushedQuiz.quiz.title
-                    ))
+                pushedQuizId?.let {quizId->
+                    pushedQuizName?.let {quizName->
+                        onAction(QuizActions.onDeleteQuiz(quizId = quizId, quizName = quizName))
+                        pushedQuizId= null
+                        pushedQuizName= null
+                    }
                 }
-                onAction(QuizActions.onClearSelectedQuiz)
             }
         )
     }
     if(state.isLoading){
         Column(
-            modifier= modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
+            modifier= modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -92,7 +92,9 @@ fun MyQuizzesScreen(
     }
     else if(state.localQuizzes.isEmpty()){
         Column(
-            modifier= Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            modifier= Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -110,7 +112,9 @@ fun MyQuizzesScreen(
         }
     } else{
         LazyColumn(
-            modifier = modifier.fillMaxSize().padding(16.dp),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(state.localQuizzes){ quiz->
@@ -125,10 +129,15 @@ fun MyQuizzesScreen(
                     },
                     onIconClick = {
                         if(state.connectedToPi){
-                            onAction(QuizActions.onSelectQuiz(quiz.quizId))
-                            state.pushedQuiz?.let{
-                                onAPIAction(APIActions.onPushToPi(it))
+                            onAction(QuizActions.onSelectQuiz(quiz.quizId){ quiz->
+                                quiz?.let{
+                                    onAPIAction(APIActions.onPushToPi(it))
+                                    showUploadDialog= true
+                                    pushedQuizId= quiz.quiz.quizId
+                                    pushedQuizName= quiz.quiz.title
+                                }
                             }
+                            )
                         } else{
                             Toast.makeText(context, "Please Connect to pi.", Toast.LENGTH_SHORT).show()
                         }

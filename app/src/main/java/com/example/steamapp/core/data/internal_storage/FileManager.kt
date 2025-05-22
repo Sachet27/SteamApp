@@ -2,6 +2,7 @@ package com.example.steamapp.core.data.internal_storage
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.webkit.MimeTypeMap
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.core.util.formatQuizName
@@ -111,21 +112,24 @@ class FileManager(
         }
     }
 
-    fun zipFolder(rawQuizName: String, quizId: Long){
+    fun zipFolder(rawQuizName: String, quizId: Long): Boolean{
+        var status: Boolean
         val folderName= "$quizId-${rawQuizName.formatQuizName()}"
         val folderToZip= File("${context.filesDir}/quizzes/$folderName")
         val zipFolder= File(context.filesDir, "zips")
         if(!zipFolder.exists()){
             zipFolder.mkdir()
         }
-        val zipFile= File(zipFolder, "{$folderName}.zip")
+        val zipFile= File(zipFolder, "$folderName.zip")
+        if(zipFile.exists()) deleteFile(zipFile)
         ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { outputStream->
-            zipFiles(folderToZip, "", outputStream)
+           status = zipFiles(folderToZip, "", outputStream)
         }
+        return status
     }
 
-    private fun zipFiles(fileToZip: File, parentDirPath: String, zipOutputStream: ZipOutputStream) {
-        if (fileToZip.isHidden) return
+    private fun zipFiles(fileToZip: File, parentDirPath: String, zipOutputStream: ZipOutputStream):Boolean {
+        if (fileToZip.isHidden) return false
 
         if (fileToZip.isDirectory) {
             val folderName = if (parentDirPath.isEmpty()) fileToZip.name else "$parentDirPath/${fileToZip.name}"
@@ -143,6 +147,7 @@ class FileManager(
                 zipOutputStream.closeEntry()
             }
         }
+        return true
     }
 
     fun prefixWithQuizId(rawQuizName: String, quizId:Long){
@@ -173,8 +178,8 @@ class FileManager(
     }
 
 
-    fun deleteFolderContents(rawQuizName: String): Boolean{
-        val quizName= rawQuizName.formatQuizName()
+    fun deleteFolderContents(rawQuizName: String, quizId: Long): Boolean{
+        val quizName= "$quizId-${rawQuizName.formatQuizName()}"
         val folder= File(context.filesDir, "quizzes/${quizName}")
         if(!folder.exists()) return true
         if(folder.isDirectory){

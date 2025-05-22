@@ -1,5 +1,6 @@
 package com.example.steamapp.api.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.data.mappers.toUploadResponse
@@ -48,6 +49,7 @@ class APIViewModel (
     }
 
      private fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
+         Log.d("Yeet", "entered upload Function")
         uploadJob= apiRepository
             .pushQuizWithQuestions(quizWithQuestions)
             .onStart {

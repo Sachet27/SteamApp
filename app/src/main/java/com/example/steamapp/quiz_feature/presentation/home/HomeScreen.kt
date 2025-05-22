@@ -1,6 +1,7 @@
 package com.example.steamapp.quiz_feature.presentation.home
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,8 @@ fun HomeScreen(
             selectedIndex= pagerState.currentPage
         }
     }
+
+
 
     Scaffold (
         bottomBar = {

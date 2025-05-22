@@ -1,6 +1,7 @@
 package com.example.steamapp.api.data.networking.repository
 
 import android.os.Build
+import android.util.Log
 import android.view.Display
 import androidx.annotation.RequiresApi
 import com.example.steamapp.api.data.mappers.toQuizEntity
@@ -76,30 +77,34 @@ class APIRepositoryImpl(
     }
 
     override fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions): Flow<UploadStatus<UploadResponseDto, NetworkError>> = channelFlow {
-        fileManager.zipFolder(
+        val zipped= async {  fileManager.zipFolder(
             rawQuizName = quizWithQuestions.quiz.title,
             quizId = quizWithQuestions.quiz.quizId
-            )
-        val zipFileInfo= fileManager.getFileInfo(quizWithQuestions.quiz.quizId, quizWithQuestions.quiz.title)
-        val uploadResponse= safeCall<UploadResponseDto> {
-            httpClient.submitFormWithBinaryData(
-                url = constructQuizUrl("/quiz-upload"),
-                formData = formData {
-                    append(zipFileInfo.name, zipFileInfo.bytes, Headers.build {
-                        append(HttpHeaders.ContentType, zipFileInfo.mimeType)
-                        append(HttpHeaders.ContentDisposition, "filename=${zipFileInfo.name}")
-                        append(HttpHeaders.ContentLength, zipFileInfo.bytes.size.toString())
-                    })
-                }
-            ){
-                onUpload{ bytesSentTotal, totalBytes->
-                    if(totalBytes!=null && totalBytes>0L){
-                        send(UploadStatus.Progress(ProgressUpdate(bytesSentTotal, totalBytes)))
+            )}.await()
+        if(zipped) {
+            val zipFileInfo = fileManager.getFileInfo(quizWithQuestions.quiz.quizId, quizWithQuestions.quiz.title)
+            Log.d("Yeet", zipFileInfo.toString())
+            val uploadResponse = safeCall<UploadResponseDto> {
+                httpClient.submitFormWithBinaryData(
+                    url = "https://dlptest.com/https-post/",
+//                    constructQuizUrl("/quiz-upload"),
+                    formData = formData {
+                        append(zipFileInfo.name, zipFileInfo.bytes, Headers.build {
+                            append(HttpHeaders.ContentType, zipFileInfo.mimeType)
+                            append(HttpHeaders.ContentDisposition, "filename=${zipFileInfo.name}")
+                            append(HttpHeaders.ContentLength, zipFileInfo.bytes.size.toString())
+                        })
+                    }
+                ) {
+                    onUpload { bytesSentTotal, totalBytes ->
+                        if (totalBytes != null && totalBytes > 0L) {
+                            send(UploadStatus.Progress(ProgressUpdate(bytesSentTotal, totalBytes)))
+                        }
                     }
                 }
             }
+            send(UploadStatus.ResultState(uploadResponse))
         }
-        send(UploadStatus.ResultState(uploadResponse))
     }
 
 

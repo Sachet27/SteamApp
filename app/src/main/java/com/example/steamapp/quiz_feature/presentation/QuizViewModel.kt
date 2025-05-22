@@ -2,6 +2,7 @@ package com.example.steamapp.quiz_feature.presentation
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -78,10 +79,7 @@ class QuizViewModel(
             is QuizActions.onChangeQuestion -> {loadNextQuestion(actions.question)}
             is QuizActions.onDeleteQuiz -> {deleteQuizWithQuestions(actions.quizId, actions.quizName)}
             QuizActions.onClearData -> { clearData() }
-            is QuizActions.onSelectQuiz -> {selectQuiz(actions.quizId)}
-            QuizActions.onClearSelectedQuiz -> {
-                _quizState.update { it.copy(pushedQuiz = null) }
-            }
+            is QuizActions.onSelectQuiz -> {selectQuiz(actions.quizId, actions.callBack)}
         }
     }
 
@@ -136,20 +134,22 @@ class QuizViewModel(
         }
     }
 
-    private fun selectQuiz(quizId: Long){
+    private fun selectQuiz(quizId: Long, callBack: ((QuizWithQuestions?)->Unit)?){
         _quizState.update {
             it.copy(
                 isLoading = true
             )
         }
         viewModelScope.launch(Dispatchers.IO) {
-            val quiz= repository.getQuizWithQuestionsById(quizId)
+            val quiz= async { repository.getQuizWithQuestionsById(quizId) }.await()
+            Log.d("Yeet", "in viewmodel: $quiz")
+
             _quizState.update {
                 it.copy(
                     isLoading = false,
-                    pushedQuiz = quiz
                 )
-            }
+                }
+            callBack?.invoke(quiz)
         }
     }
 
@@ -250,7 +250,7 @@ class QuizViewModel(
             it.copy(isLoading = true)
         }
         viewModelScope.launch(Dispatchers.IO) {
-            fileManager.deleteFolderContents(rawQuizName = quizName)
+            fileManager.deleteFolderContents(rawQuizName = quizName, quizId = quizId)
             repository.deleteQuizWithQuestionsByQuizId(quizId)
             _quizState.update {
                 it.copy(

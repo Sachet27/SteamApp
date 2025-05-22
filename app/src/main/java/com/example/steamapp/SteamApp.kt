@@ -14,7 +14,7 @@ class SteamApp: Application() {
         super.onCreate()
         startKoin{
             androidContext(this@SteamApp)
-            androidLogger(Level.ERROR)
+            androidLogger(Level.DEBUG)
             modules(quizModule)
         }
     }
