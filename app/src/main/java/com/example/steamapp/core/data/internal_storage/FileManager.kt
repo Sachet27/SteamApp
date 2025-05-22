@@ -111,14 +111,14 @@ class FileManager(
         }
     }
 
-    fun zipFolder(rawQuizName: String){
-        val quizName= rawQuizName.formatQuizName()
-        val folderToZip= File("${context.filesDir}/quizzes/$quizName")
+    fun zipFolder(rawQuizName: String, quizId: Long){
+        val folderName= "$quizId-${rawQuizName.formatQuizName()}"
+        val folderToZip= File("${context.filesDir}/quizzes/$folderName")
         val zipFolder= File(context.filesDir, "zips")
         if(!zipFolder.exists()){
             zipFolder.mkdir()
         }
-        val zipFile= File(zipFolder, "{$quizName}.zip")
+        val zipFile= File(zipFolder, "{$folderName}.zip")
         ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { outputStream->
             zipFiles(folderToZip, "", outputStream)
         }

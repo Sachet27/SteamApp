@@ -13,6 +13,7 @@ import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQ
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.io.FileNotFoundException
@@ -35,7 +37,17 @@ class APIViewModel (
     )
     private var uploadJob: Job?= null
 
-    fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
+    private val _events= Channel<APIEvents>()
+    val events= _events.receiveAsFlow()
+
+    fun onAction(action: APIActions){
+        when(action){
+            is APIActions.onPushToPi-> { pushQuizWithQuestions(action.quizWithQuestions)}
+            is APIActions.onCancelUpload-> {cancelUpload()}
+        }
+    }
+
+     private fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
         uploadJob= apiRepository
             .pushQuizWithQuestions(quizWithQuestions)
             .onStart {
@@ -68,7 +80,7 @@ class APIViewModel (
                                 }
                             }
                             .onError { error->
-                                // put error logic here
+                                 _events.send(APIEvents.Error(error))
                             }
                     }
                 }
@@ -81,6 +93,7 @@ class APIViewModel (
                             isUploadComplete = true
                         )
                     }
+                    //delete the quiz locally afterwards through events
                 } else if(cause is CancellationException){
                     _uploadState.update {
                         it.copy(
@@ -108,7 +121,8 @@ class APIViewModel (
             .launchIn(viewModelScope)
     }
 
-    fun cancelUpload(){
+    private fun cancelUpload(){
         uploadJob?.cancel()
     }
+
 }

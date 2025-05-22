@@ -34,6 +34,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 
@@ -75,6 +76,10 @@ class APIRepositoryImpl(
     }
 
     override fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions): Flow<UploadStatus<UploadResponseDto, NetworkError>> = channelFlow {
+        fileManager.zipFolder(
+            rawQuizName = quizWithQuestions.quiz.title,
+            quizId = quizWithQuestions.quiz.quizId
+            )
         val zipFileInfo= fileManager.getFileInfo(quizWithQuestions.quiz.quizId, quizWithQuestions.quiz.title)
         val uploadResponse= safeCall<UploadResponseDto> {
             httpClient.submitFormWithBinaryData(

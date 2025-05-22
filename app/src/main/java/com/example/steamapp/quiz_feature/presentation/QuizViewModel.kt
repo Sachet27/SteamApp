@@ -78,6 +78,10 @@ class QuizViewModel(
             is QuizActions.onChangeQuestion -> {loadNextQuestion(actions.question)}
             is QuizActions.onDeleteQuiz -> {deleteQuizWithQuestions(actions.quizId, actions.quizName)}
             QuizActions.onClearData -> { clearData() }
+            is QuizActions.onSelectQuiz -> {selectQuiz(actions.quizId)}
+            QuizActions.onClearSelectedQuiz -> {
+                _quizState.update { it.copy(pushedQuiz = null) }
+            }
         }
     }
 
@@ -128,6 +132,23 @@ class QuizViewModel(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    private fun selectQuiz(quizId: Long){
+        _quizState.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val quiz= repository.getQuizWithQuestionsById(quizId)
+            _quizState.update {
+                it.copy(
+                    isLoading = false,
+                    pushedQuiz = quiz
+                )
             }
         }
     }

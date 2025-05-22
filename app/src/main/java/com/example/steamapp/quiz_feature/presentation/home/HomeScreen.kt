@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.steamapp.api.presentation.APIActions
+import com.example.steamapp.api.presentation.UploadState
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.QuizState
@@ -46,7 +48,9 @@ import java.time.Instant
 fun HomeScreen(
     modifier: Modifier = Modifier,
     state: QuizState,
+    uploadState: UploadState,
     onAction: (QuizActions)-> Unit,
+    onAPIAction: (APIActions)-> Unit,
     onNavToEditQuizScreen: ()->Unit
 ) {
     var selectedIndex by remember{ mutableStateOf(0) }
@@ -131,7 +135,9 @@ fun HomeScreen(
                         onAction = onAction,
                         onNavToEditScreen = {
                             onNavToEditQuizScreen()
-                        }
+                        },
+                        uploadState = uploadState,
+                        onAPIAction = onAPIAction,
                     )
                     1->{
                         RaspberryPiQuizzesScreen(
@@ -161,7 +167,9 @@ private fun HomePreview() {
             state = QuizState(localQuizzes = dummyQuizList),
             modifier = Modifier,
             onAction = {},
-            onNavToEditQuizScreen = {}
+            onNavToEditQuizScreen = {},
+            uploadState = UploadState(),
+            onAPIAction = {}
         )
     }
 }

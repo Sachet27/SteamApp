@@ -53,7 +53,7 @@ fun QuizCard(
     @DrawableRes icon: Int,
     onClick: (Long)-> Unit,
     onDelete: ()->Unit,
-    onIconClick: (Long)-> Unit
+    onIconClick: ()-> Unit
 ) {
     val date= quiz.lastUpdatedAt.toDateString()
     Card(
@@ -90,7 +90,7 @@ fun QuizCard(
                 )
                 IconButton(
                     modifier = Modifier.weight(0.2f).height(34.dp),
-                    onClick = { onIconClick(quiz.quizId) }
+                    onClick = { onIconClick() }
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(icon),

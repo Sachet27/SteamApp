@@ -1,6 +1,7 @@
 package com.example.steamapp.quiz_feature.presentation.home
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,13 +21,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
+import com.example.steamapp.api.presentation.APIActions
+import com.example.steamapp.api.presentation.UploadState
+import com.example.steamapp.api.presentation.components.UploadDialogBox
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.QuizState
@@ -34,16 +43,39 @@ import com.example.steamapp.quiz_feature.presentation.home.components.QuizCard
 import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
 
-@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyQuizzesScreen(
     modifier: Modifier= Modifier,
+    uploadState: UploadState,
     state: QuizState,
+    onAPIAction: (APIActions)-> Unit,
     onAction: (QuizActions)-> Unit,
     onNavToEditScreen: ()->Unit
 ) {
-
+    val context= LocalContext.current
+    var showUploadDialog by remember { mutableStateOf(false) }
+    if(showUploadDialog){
+        UploadDialogBox(
+            uploadState = uploadState,
+            onCancel = {
+                onAPIAction(APIActions.onCancelUpload)
+                val message= it?: "Upload was cancelled."
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                showUploadDialog= false
+            },
+            onDone = {
+                showUploadDialog= false
+                state.pushedQuiz?.let {
+                    onAction(QuizActions.onDeleteQuiz(
+                        quizId = state.pushedQuiz.quiz.quizId,
+                        quizName = state.pushedQuiz.quiz.title
+                    ))
+                }
+                onAction(QuizActions.onClearSelectedQuiz)
+            }
+        )
+    }
     if(state.isLoading){
         Column(
             modifier= modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
@@ -91,7 +123,16 @@ fun MyQuizzesScreen(
                     onDelete={
                         onAction(QuizActions.onDeleteQuiz(quizId = quiz.quizId, quizName = quiz.title))
                     },
-                    onIconClick = {},
+                    onIconClick = {
+                        if(state.connectedToPi){
+                            onAction(QuizActions.onSelectQuiz(quiz.quizId))
+                            state.pushedQuiz?.let{
+                                onAPIAction(APIActions.onPushToPi(it))
+                            }
+                        } else{
+                            Toast.makeText(context, "Please Connect to pi.", Toast.LENGTH_SHORT).show()
+                        }
+                    },
                     icon = R.drawable.push_to_raspberry_pi_icon
                 )
             }
@@ -114,7 +155,9 @@ private fun MyQuizzesPreview() {
                 localQuizzes = dummyQuizList
             ),
             onAction = {},
-            onNavToEditScreen = {}
+            onNavToEditScreen = {},
+            uploadState = UploadState(),
+            onAPIAction = {},
         )
     }
 }
