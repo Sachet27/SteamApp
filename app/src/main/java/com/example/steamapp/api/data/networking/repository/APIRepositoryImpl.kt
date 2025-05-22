@@ -34,6 +34,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -83,19 +84,18 @@ class APIRepositoryImpl(
             )}.await()
         if(zipped) {
             val zipFileInfo = fileManager.getFileInfo(quizWithQuestions.quiz.quizId, quizWithQuestions.quiz.title)
-            Log.d("Yeet", zipFileInfo.toString())
             val uploadResponse = safeCall<UploadResponseDto> {
                 httpClient.submitFormWithBinaryData(
-                    url = "https://dlptest.com/https-post/",
-//                    constructQuizUrl("/quiz-upload"),
+                    url = constructQuizUrl("/quiz-upload"),
                     formData = formData {
-                        append(zipFileInfo.name, zipFileInfo.bytes, Headers.build {
+                        append("file", zipFileInfo.bytes, Headers.build {
                             append(HttpHeaders.ContentType, zipFileInfo.mimeType)
-                            append(HttpHeaders.ContentDisposition, "filename=${zipFileInfo.name}")
+                            append(HttpHeaders.ContentDisposition, "filename=${zipFileInfo.name}.zip")
                             append(HttpHeaders.ContentLength, zipFileInfo.bytes.size.toString())
                         })
                     }
                 ) {
+                    method= HttpMethod.Post
                     onUpload { bytesSentTotal, totalBytes ->
                         if (totalBytes != null && totalBytes > 0L) {
                             send(UploadStatus.Progress(ProgressUpdate(bytesSentTotal, totalBytes)))

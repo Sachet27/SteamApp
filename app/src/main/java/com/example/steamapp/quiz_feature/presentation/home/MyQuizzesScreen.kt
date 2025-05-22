@@ -1,6 +1,7 @@
 package com.example.steamapp.quiz_feature.presentation.home
 
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -16,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +54,7 @@ fun MyQuizzesScreen(
     var showUploadDialog by remember { mutableStateOf(false) }
     var pushedQuizId by remember { mutableStateOf<Long?>(null) }
     var pushedQuizName by remember { mutableStateOf<String?>(null) }
+
 
     if(showUploadDialog){
         UploadDialogBox(

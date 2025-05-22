@@ -2,7 +2,6 @@ package com.example.steamapp.core.data.internal_storage
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.webkit.MimeTypeMap
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.core.util.formatQuizName

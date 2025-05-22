@@ -7,7 +7,6 @@ import com.example.steamapp.api.data.mappers.toUploadResponse
 import com.example.steamapp.api.domain.models.UploadResponse
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.core.util.networking.UploadStatus
-import com.example.steamapp.core.util.networking.map
 import com.example.steamapp.core.util.networking.onError
 import com.example.steamapp.core.util.networking.onSuccess
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
@@ -49,7 +48,6 @@ class APIViewModel (
     }
 
      private fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
-         Log.d("Yeet", "entered upload Function")
         uploadJob= apiRepository
             .pushQuizWithQuestions(quizWithQuestions)
             .onStart {
@@ -95,7 +93,6 @@ class APIViewModel (
                             isUploadComplete = true
                         )
                     }
-                    //delete the quiz locally afterwards through events
                 } else if(cause is CancellationException){
                     _uploadState.update {
                         it.copy(

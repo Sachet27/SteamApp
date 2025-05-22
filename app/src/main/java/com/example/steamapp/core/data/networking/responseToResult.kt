@@ -1,5 +1,6 @@
 package com.example.steamapp.core.data.networking
 
+import android.util.Log
 import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.Result
 import io.ktor.client.call.NoTransformationFoundException
