@@ -2,6 +2,7 @@ package com.example.steamapp.core.data.internal_storage
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.webkit.MimeTypeMap
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.core.util.formatQuizName
@@ -64,7 +65,7 @@ class FileManager(
         val file= File(quizFolder , fullFileName)
         if(file.exists()){
             if(!deleteFile(file)){
-                throw IOException("Failed to delete existing media files before deleting")
+                throw IOException("Failed to delete existing media files before saving")
             }
         }
         FileOutputStream(file).use { outputStream->
@@ -78,6 +79,7 @@ class FileManager(
             quizWithQuestions.quiz.title.formatQuizName()
         else updateFolderName(quizId = quizWithQuestions.quiz.quizId, rawQuizName = quizWithQuestions.quiz.title)
         val quizJsonString= Json.encodeToString(QuizWithQuestions.serializer() ,quizWithQuestions)
+        Log.d("Yeet" , "Save Json: $quizJsonString")
         val folder= File(context.filesDir, "/quizzes/${quizName}")
         if(!folder.exists()){
             folder.mkdirs()
@@ -90,6 +92,20 @@ class FileManager(
         }
         jsonFile.writeText(quizJsonString)
     }
+
+    fun getQuizWithQuestionsFromJson(quizId: Long, rawQuizName: String): QuizWithQuestions{
+        val downloadedFolderName= "$quizId-${rawQuizName.formatQuizName()}"
+        val folder= File(context.filesDir, "quizzes/$downloadedFolderName")
+        if(!folder.exists() || !folder.isDirectory) throw IOException("The download folder does not exist")
+
+        val jsonFile= File(folder, "questions.json")
+        if(!jsonFile.exists()) throw IOException("Unexpected behavior. Json doesn't exist")
+
+        val jsonString= jsonFile.readText()
+        val quizWithQuestions= Json.decodeFromString(QuizWithQuestions.serializer(), jsonString)
+        return quizWithQuestions
+    }
+
 
     private fun updateFolderName(quizId: Long, rawQuizName: String): String{
         val parentFolder= File(context.filesDir, "quizzes")
@@ -149,6 +165,69 @@ class FileManager(
         return true
     }
 
+     fun saveTempZipFile(fileInfo: FileInfo):Boolean{
+       return try{
+            val extension= MimeTypeMap.getSingleton().getExtensionFromMimeType(fileInfo.mimeType)
+            val fullFileName= "${fileInfo.name}.$extension"
+
+            val downloadFolder= File(context.filesDir, "quizzes")
+            if(!downloadFolder.exists()) {
+                downloadFolder.mkdirs()
+            }
+            val zipFile= File(downloadFolder, fullFileName)
+           if(zipFile.exists()){
+               true
+           }else{
+               BufferedOutputStream(FileOutputStream(zipFile)).use{outputStream->
+                   outputStream.write(fileInfo.bytes)
+               }
+               true
+           }
+        } catch (e:Exception){
+            Log.d("Yeet", e.stackTraceToString())
+            false
+        }
+    }
+
+     fun unzipAndSaveFiles(fileInfo: FileInfo): Boolean{
+        val extension= MimeTypeMap.getSingleton().getExtensionFromMimeType(fileInfo.mimeType)
+        val fullFileName= "${fileInfo.name}.$extension"
+        val folder= File(context.filesDir, "quizzes")
+        if(!folder.exists()) {
+            throw Exception("Folder not detected for zip file")
+        }
+        //if folder already exists, no need to unzip again
+         val resultFolder= File(context.filesDir, fileInfo.name)
+         if(resultFolder.exists()) return true
+
+         val zipFile= File(folder, fullFileName)
+        if(!zipFile.exists() || !zipFile.isFile) return false
+
+        return try {
+            ZipInputStream(FileInputStream(zipFile)).use {inputStream->
+                var entry = inputStream.nextEntry
+                while(entry!=null){
+                    val outputFile= File(folder, entry.name)
+                    if(entry.isDirectory){
+                        outputFile.mkdirs()
+                    } else{
+                     outputFile.parentFile?.mkdirs()
+                     BufferedOutputStream(FileOutputStream(outputFile)).use {outputStream->
+                         inputStream.copyTo(outputStream)
+                     }
+                    }
+                    inputStream.closeEntry()
+                    entry= inputStream.nextEntry
+                }
+            }
+            deleteFile(zipFile)
+            true
+        } catch (e:Exception){
+            Log.d("Yeet", "In UnzipFunction: ${e.stackTraceToString()}")
+            false
+        }
+    }
+
     fun prefixWithQuizId(rawQuizName: String, quizId:Long){
         val quizName= rawQuizName.formatQuizName()
         val folder= File(context.filesDir, "quizzes/$quizName")
@@ -166,7 +245,7 @@ class FileManager(
         appendQuizFolderWithQuizId(rawQuizName, quizId)
     }
 
-    private fun appendQuizFolderWithQuizId(rawQuizName: String, quizId: Long){
+     fun appendQuizFolderWithQuizId(rawQuizName: String, quizId: Long){
         val quizName= rawQuizName.formatQuizName()
         val folder= File(context.filesDir, "quizzes/$quizName")
         if(!folder.exists() || !folder.isDirectory) return
@@ -202,5 +281,7 @@ class FileManager(
         false
     }
     }
+
+
 
 }

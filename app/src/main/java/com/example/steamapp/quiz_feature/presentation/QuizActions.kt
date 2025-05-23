@@ -5,6 +5,8 @@ import com.example.steamapp.quiz_feature.domain.models.Question
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 
 sealed class QuizActions {
+    data class onLoadDownloadedQuiz(val quizId:Long, val quizName: String): QuizActions()
+    data object onRefreshPiQuizzes: QuizActions()
     data class onSelectQuiz(val quizId: Long, val callBack: ((QuizWithQuestions?)->Unit)? = null): QuizActions()
     data class onChangeQuestion(val question: Question): QuizActions()
     data class onDeleteQuiz(val quizId: Long, val quizName: String): QuizActions()

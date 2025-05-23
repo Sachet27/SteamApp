@@ -6,24 +6,30 @@ import android.view.Display
 import androidx.annotation.RequiresApi
 import com.example.steamapp.api.data.mappers.toQuizEntity
 import com.example.steamapp.api.data.mappers.toQuizWithQuestions
+import com.example.steamapp.api.data.networking.dto.QuizDto
 import com.example.steamapp.api.data.networking.dto.QuizListDto
 import com.example.steamapp.api.data.networking.dto.QuizWithQuestionsDto
 import com.example.steamapp.api.data.networking.models.ProgressUpdate
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
+import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.core.data.internal_storage.FileManager
 import com.example.steamapp.core.data.networking.constructQuizUrl
 import com.example.steamapp.core.data.networking.safeCall
+import com.example.steamapp.core.util.formatQuizName
+import com.example.steamapp.core.util.networking.DownloadStatus
 import com.example.steamapp.core.util.networking.EmptyResult
 import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.Result
 import com.example.steamapp.core.util.networking.UploadStatus
 import com.example.steamapp.core.util.networking.map
+import com.example.steamapp.core.util.networking.onSuccess
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuiz
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.onDownload
 import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
@@ -31,10 +37,14 @@ import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.readBytes
+import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -47,12 +57,12 @@ class APIRepositoryImpl(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun getQuizzes(): Result<List<Quiz>, NetworkError> {
-        return safeCall<QuizListDto> {
+        return safeCall<List<QuizDto>> {
             httpClient.get(
                 urlString = constructQuizUrl("/quizzes")
             )
         }.map { quizList->
-            quizList.quizzes.map {
+            quizList.map {
                 it.toQuizEntity().toQuiz()
             }
         }
@@ -65,17 +75,35 @@ class APIRepositoryImpl(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun getQuizWithQuestions(quizId: Long): Result<QuizWithQuestions, NetworkError> {
-        return safeCall<QuizWithQuestionsDto> {
-            httpClient.get(
-                urlString = constructQuizUrl("/quiz/$quizId")
+    override fun getQuizWithQuestions(quizId:Long, rawQuizName: String): Flow<DownloadStatus<Unit, NetworkError>> = channelFlow {
+        val downloadResponse= safeCall<Unit> {
+           val httpResponse= httpClient.get(
+                urlString = constructQuizUrl("/chapter/$quizId-${rawQuizName.formatQuizName()}")
             ){
-                // download logic
+                onDownload { bytesSentTotal, totalBytes->
+                    if(totalBytes!=null && totalBytes>0L){
+                        send(DownloadStatus.Progress(ProgressUpdate(bytesSentTotal,totalBytes)))
+                    }
+                }
             }
-        }.map {
-            it.toQuizWithQuestions()
+            val bytes= httpResponse.readRawBytes()
+            val fileInfo= FileInfo(
+                name = "$quizId-${rawQuizName.formatQuizName()}",
+                mimeType = "application/zip",
+                bytes = bytes
+            )
+            val saved= async {  fileManager.saveTempZipFile(fileInfo)}.await()
+            if(saved){
+                val status= async { fileManager.unzipAndSaveFiles(fileInfo) }.await()
+                if(!status){
+                    send(DownloadStatus.ResultState(Result.Error(NetworkError.UNKNOWN)))
+                }
+            }
+            httpResponse
         }
-    }
+        send(DownloadStatus.ResultState(downloadResponse))
+        }
+
 
     override fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions): Flow<UploadStatus<UploadResponseDto, NetworkError>> = channelFlow {
         val zipped= async {  fileManager.zipFolder(

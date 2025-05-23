@@ -34,6 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.UploadState
+import com.example.steamapp.api.presentation.components.DownloadState
+import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.QuizState
@@ -50,10 +52,14 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     state: QuizState,
     uploadState: UploadState,
+    downloadState: DownloadState,
     onAction: (QuizActions)-> Unit,
     onAPIAction: (APIActions)-> Unit,
-    onNavToEditQuizScreen: ()->Unit
+    onNavToEditQuizScreen: ()->Unit,
+    onConnectToPi: ()->Unit,
+    onNavToDisplayScreen: (Boolean)->Unit
 ) {
+
     var selectedIndex by remember{ mutableStateOf(0) }
     val pagerState= rememberPagerState { TabItem.tabItemsList.size }
 
@@ -147,7 +153,10 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxSize(),
                             state = state,
                             onAction = onAction,
-                            onConnectToPi = {}
+                            onConnectToPi = onConnectToPi,
+                            onAPIAction = onAPIAction,
+                            downloadState = downloadState,
+                            onNavToDisplayScreen = onNavToDisplayScreen
                         )
                     }
                 }
@@ -172,7 +181,10 @@ private fun HomePreview() {
             onAction = {},
             onNavToEditQuizScreen = {},
             uploadState = UploadState(),
-            onAPIAction = {}
+            onAPIAction = {},
+            onConnectToPi = {},
+            downloadState = DownloadState(),
+            onNavToDisplayScreen = {}
         )
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,13 +69,11 @@ fun AddEditScreen(
             )
     ) }
     var showDialog by remember { mutableStateOf(true) }
-
     val imageAudioPicker= rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = {contentUri->
             contentUri?.let {
                 onStoreMedia(contentUri, currentQuiz.quiz.title, (questionIndex+1).toLong(), currentQuiz.quiz.quizId)
-
             }
         }
     )
@@ -314,6 +313,7 @@ fun AddEditScreen(
                                 Spacer(Modifier.height(4.dp))
                         }
                         Button(
+                            enabled = mediaState.audioRelativePath==null,
                             onClick = {
                                 imageAudioPicker.launch("image/*")
                             }
@@ -345,6 +345,7 @@ fun AddEditScreen(
                         }
                         Spacer(Modifier.height(4.dp))
                         Button(
+                            enabled = mediaState.imageRelativePath==null,
                             onClick = {
                                 imageAudioPicker.launch("audio/*")
                             }
@@ -386,6 +387,7 @@ fun AddEditScreen(
                                 )
                             }
                                 --questionIndex
+
                                 onAction(QuizActions.onChangeQuestion(currentQuiz.questions[questionIndex].toQuestion()))
                             },
                     ) {

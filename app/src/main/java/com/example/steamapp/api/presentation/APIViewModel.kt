@@ -6,12 +6,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.data.mappers.toUploadResponse
 import com.example.steamapp.api.domain.models.UploadResponse
 import com.example.steamapp.api.domain.repository.APIRepository
+import com.example.steamapp.api.presentation.components.DownloadState
+import com.example.steamapp.core.util.networking.DownloadStatus
+import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.UploadStatus
 import com.example.steamapp.core.util.networking.onError
 import com.example.steamapp.core.util.networking.onSuccess
+import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
+import com.example.steamapp.quiz_feature.domain.mappers.toQuizEntity
+import com.example.steamapp.quiz_feature.domain.models.Quiz
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +31,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 
 class APIViewModel (
@@ -37,6 +45,14 @@ class APIViewModel (
     )
     private var uploadJob: Job?= null
 
+    private val _downloadState= MutableStateFlow(DownloadState())
+    val downloadState= _downloadState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        DownloadState()
+    )
+    private var downloadJob: Job? = null
+
     private val _events= Channel<APIEvents>()
     val events= _events.receiveAsFlow()
 
@@ -44,8 +60,15 @@ class APIViewModel (
         when(action){
             is APIActions.onPushToPi-> { pushQuizWithQuestions(action.quizWithQuestions)}
             is APIActions.onCancelUpload-> {cancelUpload()}
+            is APIActions.onCancelDownload -> { cancelDownload()}
+            is APIActions.onDownloadFromPi -> {getQuizWithQuestions(quiz = action.quiz.toQuizEntity())}
+            is APIActions.onDeleteFromPi -> {deletePiQuiz(action.quizId)}
+            is APIActions.onPresent -> {
+
+            }
         }
     }
+
 
      private fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
         uploadJob= apiRepository
@@ -124,4 +147,81 @@ class APIViewModel (
         uploadJob?.cancel()
     }
 
+    private fun getQuizWithQuestions(quiz: QuizEntity){
+        downloadJob= apiRepository
+            .getQuizWithQuestions(quizId = quiz.quizId, rawQuizName = quiz.title)
+            .onStart {
+                _downloadState.update {
+                    it.copy(
+                        isUploading = true,
+                        isUploadComplete = false,
+                        error= null,
+                        progress = 0f,
+                        )
+                }
+            }
+            .onEach {downloadStatus->
+                when(downloadStatus){
+                    is DownloadStatus.Progress -> {
+                        _downloadState.update {
+                            it.copy(
+                                progress = downloadStatus.progress.bytesSent/downloadStatus.progress.totalBytes.toFloat()
+                            )
+                        }
+                    }
+                    is DownloadStatus.ResultState -> {
+                        downloadStatus.result
+                            .onSuccess {
+                                Log.d("Yeet","Viewmodel: Download process finished")
+                            }
+                            .onError {error->
+                                _events.send(APIEvents.Error(error))
+                            }
+                    }
+                }
+            }
+            .onCompletion {cause->
+                if(cause==null){
+                    _uploadState.update {
+                        it.copy(
+                            isUploading = false,
+                            isUploadComplete = true
+                        )
+                    }
+                } else if(cause is CancellationException){
+                    _uploadState.update {
+                        it.copy(
+                            isUploading = false,
+                            isUploadComplete = false,
+                            error = "The download was cancelled.",
+                            progress = 0f
+                        )
+                    }
+                }
+            } .catch {cause ->
+                val message= when(cause){
+                    is OutOfMemoryError-> "Memory insufficient!"
+                    is FileNotFoundException-> "File not found!"
+                    is UnresolvedAddressException-> "No internet!"
+                    else -> "Something went wrong!"
+                }
+                _uploadState.update {
+                    it.copy(
+                        isUploading = false,
+                        error = message
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun cancelDownload(){
+        downloadJob?.cancel()
+    }
+
+    private fun deletePiQuiz(quizId: Long){
+        viewModelScope.launch {
+            apiRepository.deleteQuizByQuizId(quizId)
+        }
+    }
 }
