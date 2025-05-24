@@ -9,4 +9,6 @@ interface NavRoutes {
     data object AddEditRoute: NavRoutes
     @Serializable
     data class DisplayRoute(val showAnswer: Boolean): NavRoutes
+    @Serializable
+    data object AskAIRoute: NavRoutes
 }

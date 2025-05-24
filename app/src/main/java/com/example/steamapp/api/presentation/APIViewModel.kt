@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.data.mappers.toUploadResponse
+import com.example.steamapp.api.domain.models.AIQuestion
+import com.example.steamapp.api.domain.models.Intellect
+import com.example.steamapp.api.domain.models.IntellectRequest
 import com.example.steamapp.api.domain.models.UploadResponse
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.api.presentation.components.DownloadState
@@ -53,6 +56,15 @@ class APIViewModel (
     )
     private var downloadJob: Job? = null
 
+    private val _aiQuestionState= MutableStateFlow(AIQuestionState())
+    val aiQuestionState= _aiQuestionState
+        .stateIn(
+        viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            AIQuestionState()
+    )
+
+
     private val _events= Channel<APIEvents>()
     val events= _events.receiveAsFlow()
 
@@ -66,6 +78,10 @@ class APIViewModel (
             is APIActions.onPresent -> {
 
             }
+
+            is APIActions.onAskOllama -> {askOllamaAI(action.userId, action.question)}
+            is APIActions.onSelectIntellectLevel -> {selectIntellectLevel(action.userId, action.intellect)}
+            is APIActions.onClearAIQuestionState -> {clearAIState()}
         }
     }
 
@@ -221,8 +237,63 @@ class APIViewModel (
     }
 
     private fun deletePiQuiz(quizId: Long, quizName: String){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             apiRepository.deleteQuizByQuizId(quizId, quizName)
         }
     }
+
+    private fun selectIntellectLevel(userId: String, intellect: Intellect ){
+        _aiQuestionState.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            apiRepository.selectIntellectLevel(
+                intellect = IntellectRequest(intellect),
+                user_id = userId
+            )
+                .onSuccess {response->
+                    _aiQuestionState.update {
+                        it.copy(isLoading = false, intellect = response.intellect)
+                    }
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                    _aiQuestionState.update {
+                        it.copy(isLoading = false)
+                    }
+                }
+        }
+    }
+
+    private fun askOllamaAI(userId: String, question: String){
+        _aiQuestionState.update {
+            it.copy(isLoading = true, question = question)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            apiRepository.askQuestion(
+                AIQuestion(
+                    userId = userId,
+                    question = question
+                )
+            )
+                .onSuccess {answer->
+                    _aiQuestionState.update {
+                        it.copy(isLoading = false, question = answer.question, answer = answer.answer)
+                    }
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                    _aiQuestionState.update {
+                        it.copy(question = null, isLoading= false)
+                    }
+                }
+        }
+    }
+
+    private fun clearAIState(){
+        _aiQuestionState.update {
+            it.copy(isLoading = false, question = null, answer = null)
+        }
+    }
+
 }

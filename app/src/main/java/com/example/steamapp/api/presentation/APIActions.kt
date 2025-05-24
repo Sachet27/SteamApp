@@ -1,5 +1,6 @@
 package com.example.steamapp.api.presentation
 
+import com.example.steamapp.api.domain.models.Intellect
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 
@@ -10,4 +11,8 @@ sealed class APIActions() {
     data object onCancelDownload: APIActions()
     data class onDeleteFromPi(val quizId: Long, val quizName: String): APIActions()
     data class onPresent(val quizId: Long): APIActions()
+
+    data class onAskOllama(val userId: String, val question: String): APIActions()
+    data class onSelectIntellectLevel(val userId: String, val intellect: Intellect): APIActions()
+    data object onClearAIQuestionState: APIActions()
 }

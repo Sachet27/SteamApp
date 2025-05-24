@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.steamapp.R
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.UploadState
 import com.example.steamapp.api.presentation.components.DownloadState
@@ -50,12 +51,14 @@ import java.time.Instant
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    onBottomItemClick: (BottomNavItems)->Unit,
     state: QuizState,
     uploadState: UploadState,
     downloadState: DownloadState,
     onAction: (QuizActions)-> Unit,
     onAPIAction: (APIActions)-> Unit,
     onNavToEditQuizScreen: ()->Unit,
+    onNavToAIScreen: ()->Unit,
     onConnectToPi: ()->Unit,
     onNavToDisplayScreen: (Boolean)->Unit
 ) {
@@ -80,17 +83,18 @@ fun HomeScreen(
                 onClick = {},
                 selectedItemId = BottomNavItems.QUIZ,
                 items = BottomNavigationList.list,
-                onItemClick = {}
+                onItemClick = {
+                    onBottomItemClick(it.id)
+                }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    onAction(QuizActions.onLoadQuizData(null))
-                    onNavToEditQuizScreen()
+                    onNavToAIScreen()
                 }
             ) {
-                Icon(imageVector = Icons.Outlined.Add, null)
+                Icon(imageVector = ImageVector.vectorResource( R.drawable.ask_ai_icon ), null)
             }
         },
         topBar = {
@@ -102,7 +106,10 @@ fun HomeScreen(
         }
     ){ padding->
         Column(
-            modifier= Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding)
+            modifier= Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
         ){
             TabRow(
                 containerColor = Color(0xFFFEFEFE),
@@ -135,7 +142,9 @@ fun HomeScreen(
             }
             HorizontalPager(
                 state = pagerState,
-                modifier= Modifier.fillMaxWidth().weight(1f)
+                modifier= Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) { index->
                 when(index){
                     0-> MyQuizzesScreen(
@@ -184,7 +193,9 @@ private fun HomePreview() {
             onAPIAction = {},
             onConnectToPi = {},
             downloadState = DownloadState(),
-            onNavToDisplayScreen = {}
+            onNavToDisplayScreen = {},
+            onBottomItemClick = { },
+            onNavToAIScreen = {}
         )
     }
 }
