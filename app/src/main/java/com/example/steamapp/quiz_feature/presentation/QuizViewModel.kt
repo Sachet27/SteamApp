@@ -12,6 +12,7 @@ import com.example.steamapp.core.util.getRelativePath
 import com.example.steamapp.core.data.internal_storage.FileManager
 import com.example.steamapp.core.util.networking.onError
 import com.example.steamapp.core.util.networking.onSuccess
+import com.example.steamapp.core.util.transformFilePath
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Question
@@ -39,6 +40,7 @@ class QuizViewModel(
     private val fileManager: FileManager,
     private val apiRepository: APIRepository
 ): ViewModel() {
+
 
     private val _selectedQuiz= MutableStateFlow<QuizWithQuestions?>(null)
     val selectedQuiz= _selectedQuiz.asStateFlow()
@@ -70,6 +72,12 @@ class QuizViewModel(
         SharingStarted.WhileSubscribed(5000),
         QuizFormState()
     )
+
+
+    init {
+        if(quizState.value.connectedToPi)
+            getAllRemoteQuizzes()
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onAction(actions: QuizActions){
@@ -195,7 +203,7 @@ class QuizViewModel(
         }
     }
 
-    fun loadDownloadedQuiz(quizId: Long, quizName: String){
+    private fun loadDownloadedQuiz(quizId: Long, quizName: String){
         _quizState.update {
             it.copy(isLoading = true)
         }
@@ -262,7 +270,11 @@ class QuizViewModel(
             val quizId= async {  repository.insertQuizWithQuestions(quizWithQuestions)}.await()
             val updatedQuiz= quizWithQuestions.quiz.copy(quizId = quizId)
             val updatedQuestions= quizWithQuestions.questions.map {
-                it.copy(quizId = quizId)
+                it.copy(
+                    quizId = quizId,
+                    audioRelativePath = transformFilePath(it.audioRelativePath, quizId),
+                    imageRelativePath = transformFilePath(it.imageRelativePath, quizId)
+                )
             }
             val updatedQuizWithQuestions= quizWithQuestions.copy(quiz = updatedQuiz, questions = updatedQuestions)
             fileManager.saveJson(updatedQuizWithQuestions)

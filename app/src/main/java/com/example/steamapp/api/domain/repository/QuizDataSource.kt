@@ -18,5 +18,5 @@ interface QuizDataSource {
     fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions): Flow<UploadStatus<UploadResponseDto, NetworkError>>
     suspend fun pushAction(controlMode: ControlMode): EmptyResult<NetworkError>
     suspend fun pushDisplay(display: Display): EmptyResult<NetworkError>
-    suspend fun deleteQuizByQuizId(quizId: Long): EmptyResult<NetworkError>
+    suspend fun deleteQuizByQuizId(quizId: Long, quizName: String): EmptyResult<NetworkError>
 }

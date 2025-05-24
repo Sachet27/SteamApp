@@ -5,4 +5,5 @@
     <string name="no_internet">"Please enable internet connection. "</string>
     <string name="server_error">Something went wrong. Please try again later.</string>
     <string name="serialization">Data couldn\'t be serialized.</string>
+    <string name="request_too_large">Content too large.</string>
 </resources>

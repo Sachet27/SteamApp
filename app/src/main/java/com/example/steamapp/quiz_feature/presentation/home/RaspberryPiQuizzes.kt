@@ -151,20 +151,25 @@ fun RaspberryPiQuizzesScreen(
                 RaspberryPiQuizCard(
                     quiz = quiz,
                     onDelete = {
-                        onAPIAction(APIActions.onDeleteFromPi(quizId = quiz.quizId))
+                        onAPIAction(APIActions.onDeleteFromPi(quizId = quiz.quizId, quizName= quiz.title))
+                        onAction(QuizActions.onRefreshPiQuizzes)
                         onAction(QuizActions.onRefreshPiQuizzes)
                     },
                     onPresent = {
+                        onAPIAction(APIActions.onDownloadFromPi(quiz = quiz))
+                        showDownloadDialog= true
                         selectedQuizId= quiz.quizId
                         selectedQuizName= quiz.title
                         showAnswer= false
+                        //also send display command to pi
 
                     },
                     onPreview = {
+                        onAPIAction(APIActions.onDownloadFromPi(quiz = quiz))
+                        showDownloadDialog= true
                         selectedQuizId= quiz.quizId
                         selectedQuizName= quiz.title
                         showAnswer=true
-
                     }
                 )
             }

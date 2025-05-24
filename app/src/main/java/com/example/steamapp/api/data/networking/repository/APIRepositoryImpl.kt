@@ -4,17 +4,26 @@ import android.os.Build
 import android.util.Log
 import android.view.Display
 import androidx.annotation.RequiresApi
+import com.example.steamapp.api.data.mappers.toAIAnswer
+import com.example.steamapp.api.data.mappers.toIntellectResponse
 import com.example.steamapp.api.data.mappers.toQuizEntity
 import com.example.steamapp.api.data.mappers.toQuizWithQuestions
+import com.example.steamapp.api.data.networking.dto.AIAnswerDto
+import com.example.steamapp.api.data.networking.dto.IntellectResponseDto
 import com.example.steamapp.api.data.networking.dto.QuizDto
 import com.example.steamapp.api.data.networking.dto.QuizListDto
 import com.example.steamapp.api.data.networking.dto.QuizWithQuestionsDto
 import com.example.steamapp.api.data.networking.models.ProgressUpdate
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
+import com.example.steamapp.api.domain.models.AIAnswer
+import com.example.steamapp.api.domain.models.AIQuestion
 import com.example.steamapp.api.domain.models.FileInfo
+import com.example.steamapp.api.domain.models.IntellectRequest
+import com.example.steamapp.api.domain.models.IntellectResponse
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.core.data.internal_storage.FileManager
+import com.example.steamapp.core.data.networking.constructAIUrl
 import com.example.steamapp.core.data.networking.constructQuizUrl
 import com.example.steamapp.core.data.networking.safeCall
 import com.example.steamapp.core.util.formatQuizName
@@ -36,6 +45,7 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readBytes
@@ -68,9 +78,32 @@ class APIRepositoryImpl(
         }
     }
 
-    override suspend fun deleteQuizByQuizId(quizId: Long): EmptyResult<NetworkError> {
+    override suspend fun deleteQuizByQuizId(quizId: Long, quizName:String): EmptyResult<NetworkError> {
+        val fileName= "${quizId}-${quizName.formatQuizName()}"
         return safeCall {
-            httpClient.delete("/quiz-delete/${quizId}")
+            httpClient.delete(
+            urlString = constructQuizUrl("/quiz-delete/${fileName}")
+            )
+        }
+    }
+
+    override suspend fun askQuestion(question: AIQuestion): Result<AIAnswer, NetworkError> {
+        return safeCall<AIAnswerDto> {
+            httpClient.post(
+                urlString = constructAIUrl("/ask")
+            )
+        }.map {
+            it.toAIAnswer()
+        }
+    }
+
+    override suspend fun selectIntellectLevel(intellect: IntellectRequest, user_id: String): Result<IntellectResponse, NetworkError> {
+        return safeCall<IntellectResponseDto> {
+            httpClient.put(
+                urlString = constructAIUrl("/user/$user_id")
+            )
+        }.map {
+            it.toIntellectResponse()
         }
     }
 
@@ -97,7 +130,7 @@ class APIRepositoryImpl(
                 val status= async { fileManager.unzipAndSaveFiles(fileInfo) }.await()
                 if(!status){
                     send(DownloadStatus.ResultState(Result.Error(NetworkError.UNKNOWN)))
-                }
+                } else Log.d("Yeet","zip file saved and unzipped")
             }
             httpResponse
         }

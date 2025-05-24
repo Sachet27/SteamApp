@@ -74,6 +74,7 @@ fun MyQuizzesScreen(
                         pushedQuizName= null
                     }
                 }
+                onAction(QuizActions.onRefreshPiQuizzes)
             }
         )
     }

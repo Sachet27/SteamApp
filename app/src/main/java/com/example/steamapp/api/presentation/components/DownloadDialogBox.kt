@@ -62,7 +62,7 @@ fun DownloadDialogBox(
                 val animatedProgress= animateFloatAsState(
                     targetValue = downloadState.progress,
                     animationSpec = tween(100),
-                    label= "File upload progress bar"
+                    label= "File download progress bar"
                 )
                 if(downloadState.error==null && downloadState.isUploading) {
                     LinearProgressIndicator(
@@ -78,7 +78,7 @@ fun DownloadDialogBox(
                     )
                 } else{
                     Text(
-                        text = "Successfully uploaded to Pi!",
+                        text = "Successfully downloaded from Pi!",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

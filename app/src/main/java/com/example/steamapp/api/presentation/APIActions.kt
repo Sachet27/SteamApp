@@ -8,6 +8,6 @@ sealed class APIActions() {
     data object onCancelUpload: APIActions()
     data class onDownloadFromPi(val quiz: Quiz): APIActions()
     data object onCancelDownload: APIActions()
-    data class onDeleteFromPi(val quizId: Long): APIActions()
+    data class onDeleteFromPi(val quizId: Long, val quizName: String): APIActions()
     data class onPresent(val quizId: Long): APIActions()
 }

@@ -62,7 +62,7 @@ class APIViewModel (
             is APIActions.onCancelUpload-> {cancelUpload()}
             is APIActions.onCancelDownload -> { cancelDownload()}
             is APIActions.onDownloadFromPi -> {getQuizWithQuestions(quiz = action.quiz.toQuizEntity())}
-            is APIActions.onDeleteFromPi -> {deletePiQuiz(action.quizId)}
+            is APIActions.onDeleteFromPi -> {deletePiQuiz(action.quizId, action.quizName)}
             is APIActions.onPresent -> {
 
             }
@@ -181,15 +181,16 @@ class APIViewModel (
                 }
             }
             .onCompletion {cause->
+                Log.d("Yeet", "on Completition triggered")
                 if(cause==null){
-                    _uploadState.update {
+                    _downloadState.update {
                         it.copy(
                             isUploading = false,
                             isUploadComplete = true
                         )
                     }
                 } else if(cause is CancellationException){
-                    _uploadState.update {
+                    _downloadState.update {
                         it.copy(
                             isUploading = false,
                             isUploadComplete = false,
@@ -205,7 +206,7 @@ class APIViewModel (
                     is UnresolvedAddressException-> "No internet!"
                     else -> "Something went wrong!"
                 }
-                _uploadState.update {
+                _downloadState.update {
                     it.copy(
                         isUploading = false,
                         error = message
@@ -219,9 +220,9 @@ class APIViewModel (
         downloadJob?.cancel()
     }
 
-    private fun deletePiQuiz(quizId: Long){
+    private fun deletePiQuiz(quizId: Long, quizName: String){
         viewModelScope.launch {
-            apiRepository.deleteQuizByQuizId(quizId)
+            apiRepository.deleteQuizByQuizId(quizId, quizName)
         }
     }
 }

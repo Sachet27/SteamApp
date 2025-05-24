@@ -3,6 +3,7 @@ package com.example.steamapp.quiz_feature.presentation.display
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -42,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -88,16 +92,21 @@ fun DisplayScreen(
             QuizEditTopBar(
                 title = quizWithQuestions.quiz.title,
                 onSaveNote = {
+                    player.stop()
                     onBackNav()
                 },
                 onBackNav = {
+                    player.stop()
                     onBackNav()
                 }
             )
         }
     ) {padding->
         Box(
-            modifier = modifier.fillMaxSize().padding(padding).padding(16.dp),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
             contentAlignment = Alignment.BottomCenter
         ){
             Row(
@@ -108,6 +117,7 @@ fun DisplayScreen(
                     enabled = questionIndex>0,
                     onClick = {
                         --questionIndex
+                        player.pause()
                     },
                 ) {
                     Text(
@@ -121,6 +131,7 @@ fun DisplayScreen(
                     enabled = questionIndex< quizWithQuestions.questions.size-1,
                     onClick = {
                         questionIndex++
+                        player.pause()
                     },
                 ) {
                     Text(
@@ -136,22 +147,26 @@ fun DisplayScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
+                    .padding(16.dp),
+               verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "${questionIndex+1}) ${quizWithQuestions.questions[questionIndex].title}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(16.dp))
                quizWithQuestions.questions[questionIndex].imageRelativePath?.let{imagePath->
+                   val file= File(context.filesDir, imagePath)
+                   Log.d("Yeet: ","Image path: ${file.absolutePath}")
+
                    AsyncImage(
-                       model = File(context.filesDir, imagePath),
+                       model = file.absolutePath.toUri(),
                        contentDescription = "Question Image",
-                       modifier = modifier.fillMaxWidth().height(150.dp)
+                       modifier = modifier
+                           .aspectRatio(4/3f)
                    )
-                   Spacer(Modifier.height(10.dp))
+                   Spacer(Modifier.height(16.dp))
                }
                quizWithQuestions.questions[questionIndex].audioRelativePath?.let { audioPath->
                    val file= File(context.filesDir, audioPath)
@@ -180,7 +195,9 @@ fun DisplayScreen(
                    )
                }
                LazyColumn(
-                   modifier = Modifier.fillMaxWidth().padding(8.dp)
+                   modifier = Modifier
+                       .fillMaxWidth()
+                       .padding(8.dp)
                ) {
                    itemsIndexed(quizWithQuestions.questions[questionIndex].options){index, option->
                        val optionNumber= when(index){
@@ -197,11 +214,11 @@ fun DisplayScreen(
                        ){
                            Text(
                                text = "$optionNumber) $option",
-                               style = MaterialTheme.typography.bodyLarge,
+                               style = MaterialTheme.typography.titleMedium,
                                color= if(showAnswer && index == quizWithQuestions.questions[questionIndex].correctOptionIndex) Color.Green else MaterialTheme.colorScheme.onSurface
                            )
                        }
-                       Spacer(Modifier.height(8.dp))
+                       Spacer(Modifier.height(12.dp))
                    }
                }
            }

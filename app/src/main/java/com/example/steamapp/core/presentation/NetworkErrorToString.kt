@@ -12,6 +12,7 @@ fun NetworkError.toString(context: Context): String{
         NetworkError.SERVER_ERROR -> R.string.server_error
         NetworkError.SERIALIZATION -> R.string.serialization
         NetworkError.UNKNOWN -> R.string.server_error
+        NetworkError.REQUEST_TOO_LARGE -> R.string.request_too_large
     }
     return context.getString(resId)
 }
