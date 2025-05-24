@@ -5,11 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.data.mappers.toUploadResponse
 import com.example.steamapp.api.domain.models.AIQuestion
+import com.example.steamapp.api.domain.models.Action
+import com.example.steamapp.api.domain.models.ControlMode
+import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.api.domain.models.Intellect
 import com.example.steamapp.api.domain.models.IntellectRequest
 import com.example.steamapp.api.domain.models.UploadResponse
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.api.presentation.components.DownloadState
+import com.example.steamapp.core.util.formatQuizName
 import com.example.steamapp.core.util.networking.DownloadStatus
 import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.UploadStatus
@@ -76,15 +80,125 @@ class APIViewModel (
             is APIActions.onDownloadFromPi -> {getQuizWithQuestions(quiz = action.quiz.toQuizEntity())}
             is APIActions.onDeleteFromPi -> {deletePiQuiz(action.quizId, action.quizName)}
             is APIActions.onPresent -> {
-
+                presentQuizOnPi(action.quizId, action.quizName)
             }
 
             is APIActions.onAskOllama -> {askOllamaAI(action.userId, action.question)}
             is APIActions.onSelectIntellectLevel -> {selectIntellectLevel(action.userId, action.intellect)}
             is APIActions.onClearAIQuestionState -> {clearAIState()}
+            APIActions.onExit -> {
+                exitDisplay()
+            }
+            APIActions.onFinish -> {
+                finishDisplay()
+            }
+            APIActions.onNext -> {moveToNextQuestion()}
+            APIActions.onPrevious -> {moveToPreviousQuestion()}
+            APIActions.onPauseAudio -> {pauseAudio()}
+            APIActions.onPlayAudio -> {
+                playAudio()
+            }
         }
     }
 
+    private fun playAudio(){
+        viewModelScope.launch {
+            apiRepository.pushAction(
+                controlMode = ControlMode(Action.PLAY_AUDIO)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "Playing audio")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
+
+    private fun pauseAudio(){
+        viewModelScope.launch {
+            apiRepository.pushAction(
+                controlMode = ControlMode(Action.PAUSE_AUDIO)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "Paused audio")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
+
+    private fun exitDisplay(){
+        viewModelScope.launch {
+            apiRepository.pushAction(
+                controlMode = ControlMode(Action.EXIT)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "Successfully exited display")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
+
+    private fun finishDisplay(){
+        viewModelScope.launch {
+            apiRepository.pushAction(
+                controlMode = ControlMode(Action.FINISH)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "Successfully exited display")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
+
+    private fun moveToNextQuestion(){
+        viewModelScope.launch {
+            apiRepository.pushAction(
+                controlMode = ControlMode(Action.NEXT)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "Successfully move to next question")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
+
+    private fun moveToPreviousQuestion(){
+        viewModelScope.launch {
+            apiRepository.pushAction(
+                controlMode = ControlMode(Action.PREVIOUS)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "Successfully move to previous question")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
+
+    private fun presentQuizOnPi(quizId: Long, quizName: String){
+        val fileName= "$quizId-${quizName.formatQuizName()}"
+        viewModelScope.launch {
+            apiRepository.pushDisplay(
+                Display(quizName = fileName)
+            )
+                .onSuccess {
+                    Log.d("Yeet", "$fileName Displayed on Pi")
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
+        }
+    }
 
      private fun pushQuizWithQuestions(quizWithQuestions: QuizWithQuestions){
         uploadJob= apiRepository

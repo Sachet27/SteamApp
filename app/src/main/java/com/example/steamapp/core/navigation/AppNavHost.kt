@@ -121,8 +121,8 @@ fun AppNavHost() {
                 val quiz = quizWithQuestions
                 DisplayScreen(
                     player = mediaViewModel.player,
-                    quizWithQuestions = quiz?: QuizWithQuestions(
-                        quiz = QuizEntity(0L,"", null, Instant.now(), 0),
+                    quizWithQuestions = quiz ?: QuizWithQuestions(
+                        quiz = QuizEntity(0L, "", null, Instant.now(), 0),
                         questions = emptyList()
                     ),
                     onBackNav = {
@@ -132,7 +132,8 @@ fun AppNavHost() {
                     onSetAudio = {
                         val uri = it.absolutePath.toUri()
                         mediaViewModel.setAudioUri(uri)
-                    }
+                    },
+                    onAPIActions = apiViewModel::onAction
                 )
             }
 

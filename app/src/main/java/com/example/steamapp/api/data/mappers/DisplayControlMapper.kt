@@ -9,7 +9,7 @@ import com.example.steamapp.api.domain.models.DisplayMode
 
 fun Display.toDisplayDto(): DisplayDto{
     return DisplayDto(
-        quizId = quizId,
+        quizName = quizName,
         displayMode = when(displayMode){
             DisplayMode.FULL_SCREEN-> "FULL_SCREEN"
         }
@@ -23,6 +23,8 @@ fun ControlMode.toControlModeDto(): ControlModeDto{
             Action.PREVIOUS -> "PREVIOUS"
             Action.EXIT -> "EXIT"
             Action.FINISH -> "FINISH"
+            Action.PLAY_AUDIO -> "PLAY_AUDIO"
+            Action.PAUSE_AUDIO -> "PAUSE_AUDIO"
         }
     )
 }

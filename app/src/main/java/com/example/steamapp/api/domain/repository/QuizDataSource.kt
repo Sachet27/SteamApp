@@ -1,8 +1,8 @@
 package com.example.steamapp.api.domain.repository
 
-import android.view.Display
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
+import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.core.util.networking.DownloadStatus
 import com.example.steamapp.core.util.networking.EmptyResult
 import com.example.steamapp.core.util.networking.NetworkError

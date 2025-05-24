@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SteamApp</string>
+    <string name="app_name">AI-NAS</string>
     <string name="error_request_timeout">Request timed out.</string>
     <string name="too_many_requests">Quota exceeded.</string>
     <string name="no_internet">"Please enable internet connection. "</string>

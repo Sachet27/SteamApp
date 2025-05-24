@@ -35,11 +35,9 @@ import com.example.steamapp.R
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.components.DownloadDialogBox
 import com.example.steamapp.api.presentation.components.DownloadState
-import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.QuizState
-import com.example.steamapp.quiz_feature.presentation.home.components.QuizCard
 import com.example.steamapp.quiz_feature.presentation.home.components.RaspberryPiQuizCard
 import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
@@ -75,11 +73,15 @@ fun RaspberryPiQuizzesScreen(
                     selectedQuizName?.let {quizName->
                         onAction(QuizActions.onLoadDownloadedQuiz(quizId = quizId, quizName = quizName))
                         onNavToDisplayScreen(showAnswer)
+                        if(!showAnswer){
+                            onAPIAction(APIActions.onPresent(quizId, quizName))
+                        }
                     }
                 }
                 selectedQuizId= null
                 selectedQuizName= null
                 showAnswer= false
+
             }
         )
     }
@@ -161,7 +163,6 @@ fun RaspberryPiQuizzesScreen(
                         selectedQuizId= quiz.quizId
                         selectedQuizName= quiz.title
                         showAnswer= false
-                        //also send display command to pi
 
                     },
                     onPreview = {

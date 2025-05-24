@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DisplayDto(
-    val quizId: Long,
+    val quizName: String,
     val displayMode: String
 )

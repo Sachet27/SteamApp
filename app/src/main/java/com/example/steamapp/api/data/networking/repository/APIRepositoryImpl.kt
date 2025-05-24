@@ -2,9 +2,10 @@ package com.example.steamapp.api.data.networking.repository
 
 import android.os.Build
 import android.util.Log
-import android.view.Display
 import androidx.annotation.RequiresApi
 import com.example.steamapp.api.data.mappers.toAIAnswer
+import com.example.steamapp.api.data.mappers.toControlModeDto
+import com.example.steamapp.api.data.mappers.toDisplayDto
 import com.example.steamapp.api.data.mappers.toIntellectResponse
 import com.example.steamapp.api.data.mappers.toQuizEntity
 import com.example.steamapp.api.data.mappers.toQuizWithQuestions
@@ -18,6 +19,7 @@ import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
 import com.example.steamapp.api.domain.models.AIAnswer
 import com.example.steamapp.api.domain.models.AIQuestion
+import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.api.domain.models.IntellectRequest
 import com.example.steamapp.api.domain.models.IntellectResponse
@@ -172,10 +174,10 @@ class APIRepositoryImpl(
     override suspend fun pushAction(controlMode: ControlMode): EmptyResult<NetworkError> {
         return safeCall{
             httpClient.post(
-                urlString = constructQuizUrl("/action")
+                urlString = constructQuizUrl("/update-action")
             ){
                 contentType(ContentType.Application.Json)
-                setBody(controlMode)
+                setBody(controlMode.toControlModeDto())
             }
         }
     }
@@ -183,10 +185,10 @@ class APIRepositoryImpl(
     override suspend fun pushDisplay(display: Display): EmptyResult<NetworkError> {
         return safeCall {
             httpClient.post(
-                urlString = constructQuizUrl("/display")
+                urlString = constructQuizUrl("/update-display")
             ){
                 contentType(ContentType.Application.Json)
-                setBody(display)
+                setBody(display.toDisplayDto())
             }
         }
     }

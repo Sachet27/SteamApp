@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +53,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
@@ -67,14 +69,39 @@ fun DisplayScreen(
     quizWithQuestions: QuizWithQuestions,
     onBackNav: ()->Unit,
     showAnswer: Boolean,
-    onSetAudio: (File)->Unit
+    onSetAudio: (File)->Unit,
+    onAPIActions: (APIActions)->Unit
 ) {
     var questionIndex by remember { mutableStateOf(0) }
     val context= LocalContext.current
+    var isPlaying by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        val listener= object : Player.Listener {
+            override fun onIsPlayingChanged(isPlayingNow: Boolean) {
+                if(isPlaying!= isPlayingNow ) {
+                    isPlaying = isPlayingNow
+                    if (!showAnswer) {
+                        if (isPlayingNow) {
+                            onAPIActions(APIActions.onPlayAudio)
+                        } else {
+                            onAPIActions(APIActions.onPauseAudio)
+                        }
+                    }
+                }
+            }
+        }
+        player.addListener(listener)
+        onDispose {
+            player.removeListener(listener)
+        }
+    }
 
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
+
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -93,10 +120,16 @@ fun DisplayScreen(
                 title = quizWithQuestions.quiz.title,
                 onSaveNote = {
                     player.stop()
+                    if(!showAnswer) {
+                        onAPIActions(APIActions.onExit)
+                    }
                     onBackNav()
                 },
                 onBackNav = {
                     player.stop()
+                    if(!showAnswer) {
+                        onAPIActions(APIActions.onExit)
+                    }
                     onBackNav()
                 }
             )
@@ -118,6 +151,9 @@ fun DisplayScreen(
                     onClick = {
                         --questionIndex
                         player.pause()
+                        if(!showAnswer) {
+                            onAPIActions(APIActions.onPrevious)
+                        }
                     },
                 ) {
                     Text(
@@ -128,14 +164,24 @@ fun DisplayScreen(
                 }
 
                 Button(
-                    enabled = questionIndex< quizWithQuestions.questions.size-1,
+                    enabled = questionIndex<= quizWithQuestions.questions.size-1,
                     onClick = {
-                        questionIndex++
-                        player.pause()
+                        if(questionIndex==quizWithQuestions.questions.size-1){
+                            if(!showAnswer){
+                                onAPIActions(APIActions.onFinish)
+                            }
+                            onBackNav()
+                        } else{
+                            questionIndex++
+                            player.pause()
+                            if(!showAnswer){
+                                onAPIActions(APIActions.onNext)
+                            }
+                        }
                     },
                 ) {
                     Text(
-                        text = "Next",
+                        text = if(questionIndex == quizWithQuestions.questions.size-1) "Finish" else "Next",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Normal
                     )
@@ -185,6 +231,7 @@ fun DisplayScreen(
                                }
                                Lifecycle.Event.ON_RESUME -> {
                                    it.onResume()
+
                                }
                                else -> Unit
                            }
@@ -193,6 +240,8 @@ fun DisplayScreen(
                            .fillMaxWidth()
                            .aspectRatio(16 / 9f)
                    )
+
+
                }
                LazyColumn(
                    modifier = Modifier
