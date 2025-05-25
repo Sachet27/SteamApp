@@ -51,6 +51,7 @@ import java.time.Instant
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    userId: String?,
     onBottomItemClick: (BottomNavItems)->Unit,
     state: QuizState,
     uploadState: UploadState,
@@ -60,7 +61,8 @@ fun HomeScreen(
     onNavToEditQuizScreen: ()->Unit,
     onNavToAIScreen: ()->Unit,
     onConnectToPi: ()->Unit,
-    onNavToDisplayScreen: (Boolean)->Unit
+    onNavToDisplayScreen: (Boolean)->Unit,
+    onSignOut: ()->Unit
 ) {
 
     var selectedIndex by remember{ mutableStateOf(0) }
@@ -99,9 +101,10 @@ fun HomeScreen(
         },
         topBar = {
             AppTopBar(
+                title = userId,
                 connected = state.connectedToPi,
                 onProfileClick = {},
-                onSettingsClick = {},
+                onSignOut = onSignOut,
             ) 
         }
     ){ padding->
@@ -195,7 +198,9 @@ private fun HomePreview() {
             downloadState = DownloadState(),
             onNavToDisplayScreen = {},
             onBottomItemClick = { },
-            onNavToAIScreen = {}
+            onNavToAIScreen = {},
+            onSignOut = {},
+            userId = "user1"
         )
     }
 }

@@ -54,7 +54,8 @@ fun AskAIScreen(
     modifier: Modifier = Modifier,
     state: AIQuestionState,
     onAPIActions: (APIActions)->Unit,
-    onBackNav: ()->Unit
+    onBackNav: ()->Unit,
+    userId: String
 ) {
     var question by remember{ mutableStateOf("") }
     var selectedChipIndex by remember { mutableStateOf(1) }
@@ -114,7 +115,7 @@ fun AskAIScreen(
                        onClick = {
                            onAPIActions(APIActions.onClearAIQuestionState)
                            onAPIActions(APIActions.onAskOllama(
-                               userId = "Guest",
+                               userId = userId,
                                question = question
                            ))
                        }
@@ -150,7 +151,7 @@ fun AskAIScreen(
                            ),
                            onClick = {
                                selectedChipIndex= index
-                               onAPIActions(APIActions.onSelectIntellectLevel( userId="Guest", intellect = Intellect.list[selectedChipIndex]))
+                               onAPIActions(APIActions.onSelectIntellectLevel( userId= userId, intellect = Intellect.list[selectedChipIndex]))
                            },
                            label = {
                                val label= when(intellect){
@@ -228,11 +229,15 @@ fun AskAIScreen(
 private fun AskAIPreview() {
     SteamAppTheme {
         AskAIScreen(
-            state = AIQuestionState(question = "What is the capital of France?", answer = "Sure! Here's a random paragraph:\n" +
-                    "\n" +
-                    "The sky was painted in hues of orange and pink, with streaks of gold splashed across the horizon as the sun began its descent. A gentle breeze carried the scent of blooming jasmine, intertwining with the distant melody of chirping crickets. Along the cobblestone path, a child chased a fluttering butterfly, their laughter echoing through the tranquil evening. Nearby, an old oak tree stood tall and unwavering, its branches swaying gracefully as if nodding to the rhythm of the wind. It was one of those moments where time seemed to pause, allowing nature's beauty to take center stage."),
+            state = AIQuestionState(
+                question = "What is the capital of France?",
+                answer = "Sure! Here's a random paragraph:\n" +
+                        "\n" +
+                        "The sky was painted in hues of orange and pink, with streaks of gold splashed across the horizon as the sun began its descent. A gentle breeze carried the scent of blooming jasmine, intertwining with the distant melody of chirping crickets. Along the cobblestone path, a child chased a fluttering butterfly, their laughter echoing through the tranquil evening. Nearby, an old oak tree stood tall and unwavering, its branches swaying gracefully as if nodding to the rhythm of the wind. It was one of those moments where time seemed to pause, allowing nature's beauty to take center stage."
+            ),
             onAPIActions = {},
-            onBackNav = {}
+            onBackNav = {},
+            userId = "user1"
         )
     }
 }

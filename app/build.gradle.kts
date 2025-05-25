@@ -60,6 +60,8 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.datastore.preferences)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

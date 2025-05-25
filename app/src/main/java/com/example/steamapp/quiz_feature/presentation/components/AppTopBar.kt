@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,7 +44,7 @@ fun AppTopBar(
     title: String?= null,
     userPfp: String?= null,
     onProfileClick: ()-> Unit,
-    onSettingsClick: ()-> Unit
+    onSignOut: ()-> Unit
 ) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
@@ -74,10 +75,10 @@ fun AppTopBar(
                  horizontalArrangement = Arrangement.spacedBy(10.dp)
              ) {
                 IconButton(
-                    onClick = onSettingsClick
+                    onClick = onSignOut
                 ) { 
                     Icon(
-                        imageVector = Icons.Outlined.Settings,
+                        imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(30.dp)
@@ -101,7 +102,7 @@ private fun TopBarPreview() {
         Scaffold(
             topBar = { AppTopBar(
                 onProfileClick = {},
-                onSettingsClick = {},
+                onSignOut = {},
                 connected = true
             ) }
         ) {

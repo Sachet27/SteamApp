@@ -11,12 +11,17 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.APIEvents
 import com.example.steamapp.api.presentation.APIViewModel
 import com.example.steamapp.api.presentation.AskAIScreen
+import com.example.steamapp.auth.presentation.AuthActions
+import com.example.steamapp.auth.presentation.AuthResponse
+import com.example.steamapp.auth.presentation.AuthViewModel
+import com.example.steamapp.auth.presentation.login.LoginScreen
 import com.example.steamapp.core.presentation.ObserveAsEvents
 import com.example.steamapp.core.presentation.toString
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
@@ -37,7 +42,9 @@ import java.time.Instant
 fun AppNavHost() {
         val apiViewModel: APIViewModel = koinViewModel()
         val quizViewModel: QuizViewModel = koinViewModel()
-        val mediaViewModel: MediaViewModel = koinViewModel()
+        val mediaViewModel: MediaViewModel = koinViewModel() 
+        val authViewModel: AuthViewModel= koinViewModel()
+
 
         val uploadState by apiViewModel.uploadState.collectAsStateWithLifecycle()
         val downloadState by apiViewModel.downloadState.collectAsStateWithLifecycle()
@@ -46,8 +53,11 @@ fun AppNavHost() {
         val quizFormState by quizViewModel.quizFormState.collectAsStateWithLifecycle()
         val quizWithQuestions by quizViewModel.selectedQuiz.collectAsStateWithLifecycle()
         val aiQuestionState by apiViewModel.aiQuestionState.collectAsStateWithLifecycle()
+        val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
-        val events = merge(quizViewModel.quizEvents, apiViewModel.events)
+        val userId by authViewModel.userId.collectAsStateWithLifecycle(null)
+    
+        val events = merge(quizViewModel.quizEvents, apiViewModel.events, authViewModel.events)
         val context = LocalContext.current
         ObserveAsEvents(events = events) { event ->
             when (event) {
@@ -57,95 +67,113 @@ fun AppNavHost() {
             }
         }
 
+
         val navController = rememberNavController()
 
-        NavHost(navController = navController, startDestination = NavRoutes.HomeRoute) {
-            composable<NavRoutes.HomeRoute> {
-                HomeScreen(
-                    state = quizState,
-                    onAction = quizViewModel::onAction,
-                    onNavToEditQuizScreen = {
-                        navController.navigate(NavRoutes.AddEditRoute)
-                    },
-                    uploadState = uploadState,
-                    onAPIAction = apiViewModel::onAction,
-                    onConnectToPi = {
-                        //wifi connection stuff halnu parxa
-                        quizViewModel.getAllRemoteQuizzes()
-                    },
-                    downloadState = downloadState,
-                    onNavToDisplayScreen = { showAnswer ->
-                        navController.navigate(NavRoutes.DisplayRoute(showAnswer))
-                    },
-                    onBottomItemClick = {
-                        when (it) {
-                            BottomNavItems.QUIZ -> {
-                                navController.navigate(NavRoutes.HomeRoute) {
-                                    popUpTo(NavRoutes.HomeRoute) { inclusive = true }
+        NavHost(navController = navController, startDestination = if(authState.isSignedIn is AuthResponse.Authenticated) SubGraph.QuizRoute else SubGraph.AuthRoute) {
+            navigation<SubGraph.AuthRoute>(startDestination = NavRoutes.LoginRoute){
+                composable<NavRoutes.LoginRoute> {
+                    LoginScreen(
+                        onAction = authViewModel::onAction,
+                        state = authState,
+                        onSignIn = {
+                            navController.navigate(SubGraph.QuizRoute)
+                        },
+                    )
+                }
+            }
+
+            navigation<SubGraph.QuizRoute>(startDestination = NavRoutes.HomeRoute){
+                composable<NavRoutes.HomeRoute> {
+                    HomeScreen(
+                        userId= userId,
+                        state = quizState,
+                        onAction = quizViewModel::onAction,
+                        onNavToEditQuizScreen = {
+                            navController.navigate(NavRoutes.AddEditRoute)
+                        },
+                        uploadState = uploadState,
+                        onAPIAction = apiViewModel::onAction,
+                        onConnectToPi = {
+                            //wifi connection stuff halnu parxa
+                            quizViewModel.getAllRemoteQuizzes()
+                        },
+                        downloadState = downloadState,
+                        onNavToDisplayScreen = { showAnswer ->
+                            navController.navigate(NavRoutes.DisplayRoute(showAnswer))
+                        },
+                        onBottomItemClick = {
+                            when (it) {
+                                BottomNavItems.QUIZ -> {
+                                    navController.navigate(NavRoutes.HomeRoute) {
+                                        popUpTo(NavRoutes.HomeRoute) { inclusive = true }
+                                    }
+                                }
+
+                                BottomNavItems.MATERIAL -> {}
+                                BottomNavItems.CREATE -> {
+                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
+                                    navController.navigate(NavRoutes.AddEditRoute)
                                 }
                             }
-
-                            BottomNavItems.MATERIAL -> {}
-                            BottomNavItems.CREATE -> {
-                                quizViewModel.onAction(QuizActions.onLoadQuizData(null))
-                                navController.navigate(NavRoutes.AddEditRoute)
-                            }
+                        },
+                        onNavToAIScreen = { navController.navigate(NavRoutes.AskAIRoute) },
+                        onSignOut = {
+                            authViewModel.onAction(AuthActions.OnSignOut)
                         }
-                    },
-                    onNavToAIScreen = { navController.navigate(NavRoutes.AskAIRoute) }
-                )
-            }
-            composable<NavRoutes.AddEditRoute> {
-                AddEditScreen(
-                    state = quizFormState,
-                    onAction = quizViewModel::onAction,
-                    onBackNav = {
-                        navController.popBackStack()
-                    },
-                    onStoreMedia = { contentUri, quizName, questionId, quizId ->
-                        quizViewModel.saveMediaInInternalStorage(
-                            contentUri,
-                            quizName,
-                            questionId,
-                            quizId
-                        )
-                    },
-                    mediaState = mediaState
-                )
-            }
+                    )
+                }
+                composable<NavRoutes.AddEditRoute> {
+                    AddEditScreen(
+                        state = quizFormState,
+                        onAction = quizViewModel::onAction,
+                        onBackNav = {
+                            navController.popBackStack()
+                        },
+                        onStoreMedia = { contentUri, quizName, questionId, quizId ->
+                            quizViewModel.saveMediaInInternalStorage(
+                                contentUri,
+                                quizName,
+                                questionId,
+                                quizId
+                            )
+                        },
+                        mediaState = mediaState
+                    )
+                }
+                composable<NavRoutes.DisplayRoute> {
+                    val args = it.toRoute<NavRoutes.DisplayRoute>()
+                    val showAnswer = args.showAnswer
+                    val quiz = quizWithQuestions
+                    DisplayScreen(
+                        player = mediaViewModel.player,
+                        quizWithQuestions = quiz ?: QuizWithQuestions(
+                            quiz = QuizEntity(0L, "", null, Instant.now(), 0),
+                            questions = emptyList()
+                        ),
+                        onBackNav = {
+                            navController.popBackStack()
+                        },
+                        showAnswer = showAnswer,
+                        onSetAudio = {
+                            val uri = it.absolutePath.toUri()
+                            mediaViewModel.setAudioUri(uri)
+                        },
+                        onAPIActions = apiViewModel::onAction
+                    )
+                }
+                composable<NavRoutes.AskAIRoute> {
+                    AskAIScreen(
+                        state = aiQuestionState,
+                        onAPIActions = apiViewModel::onAction,
+                        onBackNav = {
+                            navController.popBackStack()
+                            apiViewModel.onAction(APIActions.onClearAIQuestionState)
+                        },
+                        userId = userId?:"Guest"
+                    )
+                }
 
-            //crash happens when this is encountered
-            composable<NavRoutes.DisplayRoute> {
-                val args = it.toRoute<NavRoutes.DisplayRoute>()
-                val showAnswer = args.showAnswer
-                val quiz = quizWithQuestions
-                DisplayScreen(
-                    player = mediaViewModel.player,
-                    quizWithQuestions = quiz ?: QuizWithQuestions(
-                        quiz = QuizEntity(0L, "", null, Instant.now(), 0),
-                        questions = emptyList()
-                    ),
-                    onBackNav = {
-                        navController.popBackStack()
-                    },
-                    showAnswer = showAnswer,
-                    onSetAudio = {
-                        val uri = it.absolutePath.toUri()
-                        mediaViewModel.setAudioUri(uri)
-                    },
-                    onAPIActions = apiViewModel::onAction
-                )
-            }
-
-            composable<NavRoutes.AskAIRoute> {
-                AskAIScreen(
-                    state = aiQuestionState,
-                    onAPIActions = apiViewModel::onAction,
-                    onBackNav = {
-                        navController.popBackStack()
-                        apiViewModel.onAction(APIActions.onClearAIQuestionState)
-                    }
-                )
             }
         }
 }
