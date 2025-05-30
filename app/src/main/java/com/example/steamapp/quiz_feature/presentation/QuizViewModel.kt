@@ -3,9 +3,12 @@ package com.example.steamapp.quiz_feature.presentation
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.api.presentation.APIEvents
 import com.example.steamapp.core.util.getRelativePath
@@ -32,6 +35,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.qualifier._q
 import java.time.Instant
 
@@ -41,6 +45,13 @@ class QuizViewModel(
     private val apiRepository: APIRepository
 ): ViewModel() {
 
+
+    private val _scores = MutableStateFlow<Score?>(null)
+     val scores= _scores.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        null
+    )
 
     private val _selectedQuiz= MutableStateFlow<QuizWithQuestions?>(null)
     val selectedQuiz= _selectedQuiz.asStateFlow()
@@ -107,6 +118,8 @@ class QuizViewModel(
             QuizActions.onClearData -> { clearData() }
             is QuizActions.onSelectQuiz -> {selectQuiz(actions.quizId, actions.callBack)}
             QuizActions.onRefreshPiQuizzes -> {getAllRemoteQuizzes()}
+            QuizActions.onClearScores -> {clearScores()}
+            QuizActions.onGetScores -> {getScores()}
         }
     }
 
@@ -165,6 +178,35 @@ class QuizViewModel(
                 )
             }
         }
+        }
+    }
+
+    private fun clearScores(){
+        viewModelScope.launch {
+            _scores.update { null }
+        }
+    }
+
+    private fun getScores(){
+        _quizFormState.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            apiRepository.getScores()
+                .onSuccess {score->
+                    _quizFormState.update {
+                        it.copy(isLoading = false)
+                    }
+                    _scores.update {
+                        score
+                    }
+                }
+                .onError {
+                    _quizFormState.update {
+                        it.copy(isLoading = false)
+                    }
+                    _events.send(APIEvents.Error(it))
+                }
         }
     }
 

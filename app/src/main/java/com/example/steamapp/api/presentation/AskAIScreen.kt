@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ChipColors
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,52 +91,11 @@ fun AskAIScreen(
                 )
             }
         }
-
-       Box(
-           modifier = modifier
-               .fillMaxSize()
-               .padding(padding)
-               .padding(16.dp),
-           contentAlignment = Alignment.BottomCenter
-       ) {
-               Row(
-                   modifier = Modifier.fillMaxWidth(),
-                   verticalAlignment = Alignment.CenterVertically,
-                   horizontalArrangement = Arrangement.spacedBy(6.dp)
-               ) {
-                   OutlinedTextField(
-                       modifier = Modifier.weight(1f),
-                       value = question,
-                       onValueChange = { question = it },
-                       placeholder = {
-                           Text(
-                               text = "Ask a question!"
-                           )
-                       }
-                   )
-                   IconButton(
-                       onClick = {
-                           onAPIActions(APIActions.onClearAIQuestionState)
-                           onAPIActions(APIActions.onAskOllama(
-                               userId = userId,
-                               question = question
-                           ))
-                       }
-                   ) {
-                       Icon(
-                           imageVector = ImageVector.vectorResource(R.drawable.send_icon),
-                           contentDescription = null,
-                           tint = MaterialTheme.colorScheme.primary,
-                           modifier = Modifier.size(30.dp)
-                       )
-                   }
-           }
-       }
            Column(
                modifier = modifier
                    .fillMaxSize()
                    .padding(padding)
-                   .padding(12.dp)
+                   .padding(top= 12.dp, start = 12.dp, end= 12.dp, bottom= 70.dp)
            ) {
                Text("Select an intellect level:")
                Spacer(Modifier.height(8.dp))
@@ -175,7 +137,10 @@ fun AskAIScreen(
                        verticalAlignment = Alignment.CenterVertically
                    ){
                        Box(
-                           modifier = Modifier.clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colorScheme.surfaceContainer),
+                           modifier = Modifier
+                               .clip(RoundedCornerShape(15.dp))
+                               .background(MaterialTheme.colorScheme.surfaceContainer)
+                               .weight(1f, false),
                        ){
                            Text(
                                modifier = Modifier.padding(16.dp),
@@ -208,18 +173,65 @@ fun AskAIScreen(
                            modifier = Modifier.padding(4.dp).clip(CircleShape).size(34.dp)
                        )
                        Box(
-                           modifier = Modifier.clip(RoundedCornerShape(15.dp)).background(MaterialTheme.colorScheme.surfaceContainer),
+                           modifier = Modifier
+                               .clip(RoundedCornerShape(15.dp))
+                               .background(MaterialTheme.colorScheme.surfaceContainer)
+                               .weight(1f, false),
                        ){
-                           Text(
-                               modifier = Modifier.padding(16.dp),
-                               text = state.answer,
-                               style = MaterialTheme.typography.bodyMedium
-                           )
+                           Column(
+                               modifier = Modifier.padding(6.dp).verticalScroll(rememberScrollState())
+                           ) {
+                               Text(
+                                   modifier = Modifier.padding(16.dp),
+                                   text = state.answer,
+                                   style = MaterialTheme.typography.bodyMedium
+                               )
+                           }
                        }
                    }
                }
 
            }
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                OutlinedTextField(
+                    modifier = Modifier.weight(1f),
+                    value = question,
+                    onValueChange = { question = it },
+                    placeholder = {
+                        Text(
+                            text = "Ask a question!"
+                        )
+                    }
+                )
+                IconButton(
+                    onClick = {
+                        onAPIActions(APIActions.onClearAIQuestionState)
+                        onAPIActions(APIActions.onAskOllama(
+                            userId = userId,
+                            question = question
+                        ))
+                    }
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.send_icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -230,7 +242,7 @@ private fun AskAIPreview() {
     SteamAppTheme {
         AskAIScreen(
             state = AIQuestionState(
-                question = "What is the capital of France?",
+                question = "What is the capital of France?".repeat(2),
                 answer = "Sure! Here's a random paragraph:\n" +
                         "\n" +
                         "The sky was painted in hues of orange and pink, with streaks of gold splashed across the horizon as the sun began its descent. A gentle breeze carried the scent of blooming jasmine, intertwining with the distant melody of chirping crickets. Along the cobblestone path, a child chased a fluttering butterfly, their laughter echoing through the tranquil evening. Nearby, an old oak tree stood tall and unwavering, its branches swaying gracefully as if nodding to the rhythm of the wind. It was one of those moments where time seemed to pause, allowing nature's beauty to take center stage."

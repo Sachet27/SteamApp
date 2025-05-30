@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
 import com.example.steamapp.api.presentation.APIActions
+import com.example.steamapp.core.util.formatToReadableDate
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
@@ -48,40 +51,40 @@ fun RaspberryPiQuizCard(
     onPresent: ()-> Unit,
     onPreview: ()-> Unit
 ) {
-    val date= quiz.lastUpdatedAt.toDateString()
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)
-            .combinedClickable(
+            .combinedClickable (
                 onClick = onPreview,
                 onLongClick = onDelete
-            ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+            )
+        ,
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(0.5.dp, Color.Gray),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = modifier
-                .fillMaxSize()
-                .padding(10.dp)
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Row(
-                modifier = modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(0.7f),
                     text = quiz.title,
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 14.sp
+                    lineHeight = 22.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Row(){
+
+                Row(modifier = Modifier.weight(0.3f)){
                     IconButton(
                         modifier = Modifier.height(34.dp),
                         onClick = onPreview
@@ -107,35 +110,31 @@ fun RaspberryPiQuizCard(
                     }
                 }
             }
-            Spacer(Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = quiz.description ?: "No description",
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 12.sp,
+                text = quiz.description?: "No description.",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.secondary,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 16.sp
             )
-            Box(
-                modifier= Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomStart
-            ){
-                Row(
-                    modifier= Modifier.fillMaxWidth().padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ){
-                    Text(
-                        text = "${quiz.questionCount} questions",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = "Last updated: ${date}",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Questions: ${quiz.questionCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Updated: ${quiz.lastUpdatedAt.formatToReadableDate()}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -150,7 +149,7 @@ private fun PiQuizCardPreview() {
             quiz = Quiz(
                 quizId = 1,
                 title = "Mathematics Quiz and Science Quiz",
-                description = "Simple Quiz to test trigonometry".repeat(4),
+                description = null,
                 lastUpdatedAt = Instant.now(),
                 questionCount = 8
             ),

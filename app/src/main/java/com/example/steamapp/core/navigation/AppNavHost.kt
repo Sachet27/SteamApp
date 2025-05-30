@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.APIEvents
 import com.example.steamapp.api.presentation.APIViewModel
@@ -24,6 +25,7 @@ import com.example.steamapp.auth.presentation.AuthViewModel
 import com.example.steamapp.auth.presentation.login.LoginScreen
 import com.example.steamapp.core.presentation.ObserveAsEvents
 import com.example.steamapp.core.presentation.toString
+import com.example.steamapp.material_feature.presentation.MaterialViewModel
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.presentation.QuizActions
@@ -32,6 +34,7 @@ import com.example.steamapp.quiz_feature.presentation.add_and_edit.AddEditScreen
 import com.example.steamapp.quiz_feature.presentation.audio_playback.MediaViewModel
 import com.example.steamapp.quiz_feature.presentation.components.BottomNavItems
 import com.example.steamapp.quiz_feature.presentation.display.DisplayScreen
+import com.example.steamapp.quiz_feature.presentation.display.ScoreScreen
 import com.example.steamapp.quiz_feature.presentation.home.HomeScreen
 import kotlinx.coroutines.flow.merge
 import org.koin.androidx.compose.koinViewModel
@@ -44,7 +47,7 @@ fun AppNavHost() {
         val quizViewModel: QuizViewModel = koinViewModel()
         val mediaViewModel: MediaViewModel = koinViewModel() 
         val authViewModel: AuthViewModel= koinViewModel()
-
+        val materialViewModel: MaterialViewModel = koinViewModel()
 
         val uploadState by apiViewModel.uploadState.collectAsStateWithLifecycle()
         val downloadState by apiViewModel.downloadState.collectAsStateWithLifecycle()
@@ -54,8 +57,11 @@ fun AppNavHost() {
         val quizWithQuestions by quizViewModel.selectedQuiz.collectAsStateWithLifecycle()
         val aiQuestionState by apiViewModel.aiQuestionState.collectAsStateWithLifecycle()
         val authState by authViewModel.authState.collectAsStateWithLifecycle()
+        val materialState by materialViewModel.materialState.collectAsStateWithLifecycle()
+
 
         val userId by authViewModel.userId.collectAsStateWithLifecycle(null)
+        val scores by quizViewModel.scores.collectAsStateWithLifecycle()
     
         val events = merge(quizViewModel.quizEvents, apiViewModel.events, authViewModel.events)
         val context = LocalContext.current
@@ -110,10 +116,14 @@ fun AppNavHost() {
                                     }
                                 }
 
-                                BottomNavItems.MATERIAL -> {}
+                                BottomNavItems.MATERIAL -> {
+
+                                }
                                 BottomNavItems.CREATE -> {
-                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
-                                    navController.navigate(NavRoutes.AddEditRoute)
+
+
+//                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
+//                                    navController.navigate(NavRoutes.AddEditRoute)
                                 }
                             }
                         },
@@ -159,7 +169,10 @@ fun AppNavHost() {
                             val uri = it.absolutePath.toUri()
                             mediaViewModel.setAudioUri(uri)
                         },
-                        onAPIActions = apiViewModel::onAction
+                        onAPIActions = apiViewModel::onAction,
+                        onFetchScores = {quizViewModel.onAction(QuizActions.onGetScores)},
+                        onNavToScoreScreen = {navController.navigate(NavRoutes.ScoreRoute(
+                            quiz?.quiz?.questionCount ?:1))},
                     )
                 }
                 composable<NavRoutes.AskAIRoute> {
@@ -171,6 +184,21 @@ fun AppNavHost() {
                             apiViewModel.onAction(APIActions.onClearAIQuestionState)
                         },
                         userId = userId?:"Guest"
+                    )
+                }
+
+                composable<NavRoutes.ScoreRoute> {
+                    val args= it.toRoute<NavRoutes.ScoreRoute>()
+                    val questionCount= args.questionCount
+                    ScoreScreen(
+                        score= scores?: Score(0,0,0),
+                        onDone= {
+                            quizViewModel.onAction(QuizActions.onClearScores)
+                            navController.navigate(NavRoutes.HomeRoute) {
+                                popUpTo(NavRoutes.HomeRoute) { inclusive = true }
+                            }
+                        },
+                        questionCount= questionCount
                     )
                 }
 

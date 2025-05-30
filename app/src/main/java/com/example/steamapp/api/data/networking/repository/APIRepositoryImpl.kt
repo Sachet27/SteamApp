@@ -4,16 +4,17 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.steamapp.api.data.mappers.toAIAnswer
+import com.example.steamapp.api.data.mappers.toAIQuestionDTO
 import com.example.steamapp.api.data.mappers.toControlModeDto
 import com.example.steamapp.api.data.mappers.toDisplayDto
+import com.example.steamapp.api.data.mappers.toIntellectRequestDTO
 import com.example.steamapp.api.data.mappers.toIntellectResponse
 import com.example.steamapp.api.data.mappers.toQuizEntity
-import com.example.steamapp.api.data.mappers.toQuizWithQuestions
+import com.example.steamapp.api.data.mappers.toScore
 import com.example.steamapp.api.data.networking.dto.AIAnswerDto
 import com.example.steamapp.api.data.networking.dto.IntellectResponseDto
 import com.example.steamapp.api.data.networking.dto.QuizDto
-import com.example.steamapp.api.data.networking.dto.QuizListDto
-import com.example.steamapp.api.data.networking.dto.QuizWithQuestionsDto
+import com.example.steamapp.api.data.networking.dto.ScoreDto
 import com.example.steamapp.api.data.networking.models.ProgressUpdate
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
@@ -23,6 +24,7 @@ import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.api.domain.models.IntellectRequest
 import com.example.steamapp.api.domain.models.IntellectResponse
+import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.core.data.internal_storage.FileManager
 import com.example.steamapp.core.data.networking.constructAIUrl
@@ -35,7 +37,6 @@ import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.Result
 import com.example.steamapp.core.util.networking.UploadStatus
 import com.example.steamapp.core.util.networking.map
-import com.example.steamapp.core.util.networking.onSuccess
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuiz
 import com.example.steamapp.quiz_feature.domain.models.Quiz
@@ -49,14 +50,11 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readBytes
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -89,11 +87,24 @@ class APIRepositoryImpl(
         }
     }
 
+    override suspend fun getScores(): Result<Score, NetworkError> {
+        return safeCall<ScoreDto>{
+            httpClient.get(
+                urlString = constructQuizUrl("/scores")
+            )
+        }.map{
+            it.toScore()
+        }
+    }
+
     override suspend fun askQuestion(question: AIQuestion): Result<AIAnswer, NetworkError> {
         return safeCall<AIAnswerDto> {
             httpClient.post(
                 urlString = constructAIUrl("/ask")
-            )
+            ){
+                contentType(ContentType.Application.Json)
+                setBody(question.toAIQuestionDTO())
+            }
         }.map {
             it.toAIAnswer()
         }
@@ -103,7 +114,10 @@ class APIRepositoryImpl(
         return safeCall<IntellectResponseDto> {
             httpClient.put(
                 urlString = constructAIUrl("/user/$user_id")
-            )
+            ){
+                contentType(ContentType.Application.Json)
+                setBody(intellect.toIntellectRequestDTO())
+            }
         }.map {
             it.toIntellectResponse()
         }

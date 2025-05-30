@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
@@ -67,10 +68,12 @@ fun DisplayScreen(
     modifier: Modifier = Modifier,
     player:Player,
     quizWithQuestions: QuizWithQuestions,
+    onFetchScores: ()->Unit,
     onBackNav: ()->Unit,
     showAnswer: Boolean,
     onSetAudio: (File)->Unit,
-    onAPIActions: (APIActions)->Unit
+    onAPIActions: (APIActions)->Unit,
+    onNavToScoreScreen: ()->Unit
 ) {
     var questionIndex by remember { mutableStateOf(0) }
     val context= LocalContext.current
@@ -169,8 +172,11 @@ fun DisplayScreen(
                         if(questionIndex==quizWithQuestions.questions.size-1){
                             if(!showAnswer){
                                 onAPIActions(APIActions.onFinish)
+                                onFetchScores()
+                                onNavToScoreScreen()
+                            } else{
+                                onBackNav()
                             }
-                            onBackNav()
                         } else{
                             questionIndex++
                             player.pause()

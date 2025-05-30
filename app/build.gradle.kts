@@ -22,8 +22,8 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/\"")
-            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/\"")
+            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://192.168.4.1:5000/\"")
+            buildConfigField("String", "AI_API_BASE_URL", "\"http://192.168.4.1:3000/\"")
         }
         release {
             isMinifyEnabled = false
@@ -31,8 +31,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://139.59.27.235:5000/\"")
-            buildConfigField("String", "AI_API_BASE_URL", "\"http://139.59.27.235:3000/\"")
+            buildConfigField("String", "QUIZ_API_BASE_URL", "\"http://192.168.4.1:5000/\"")
+            buildConfigField("String", "AI_API_BASE_URL", "\"http://192.168.4.1:3000/\"")
         }
     }
     compileOptions {
@@ -49,7 +49,7 @@ android {
 }
 
 dependencies {
-
+    implementation (libs.play.services.mlkit.document.scanner)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.coil.compose)
     implementation(libs.navigation.compose)

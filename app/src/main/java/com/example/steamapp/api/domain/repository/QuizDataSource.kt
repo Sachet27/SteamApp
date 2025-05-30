@@ -3,6 +3,7 @@ package com.example.steamapp.api.domain.repository
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
 import com.example.steamapp.api.domain.models.Display
+import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.core.util.networking.DownloadStatus
 import com.example.steamapp.core.util.networking.EmptyResult
 import com.example.steamapp.core.util.networking.NetworkError
@@ -19,4 +20,5 @@ interface QuizDataSource {
     suspend fun pushAction(controlMode: ControlMode): EmptyResult<NetworkError>
     suspend fun pushDisplay(display: Display): EmptyResult<NetworkError>
     suspend fun deleteQuizByQuizId(quizId: Long, quizName: String): EmptyResult<NetworkError>
+    suspend fun getScores(): Result<Score, NetworkError>
 }

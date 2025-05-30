@@ -2,6 +2,7 @@ package com.example.steamapp.core.data.networking
 
 import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.Result
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.statement.HttpResponse
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.ensureActive
@@ -17,7 +18,9 @@ suspend inline fun <reified T> safeCall(
         return Result.Error(NetworkError.NO_INTERNET)
     }catch (e: SerializationException){
         return Result.Error(NetworkError.SERIALIZATION)
-    }catch (e: Exception){
+    }catch (e:HttpRequestTimeoutException){
+      return Result.Error(NetworkError.REQUEST_TIMEOUT)
+    } catch (e: Exception){
         coroutineContext.ensureActive()
         return Result.Error(NetworkError.UNKNOWN)
     }

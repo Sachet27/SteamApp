@@ -1,8 +1,13 @@
 package com.example.steamapp.core.util
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.MediaState
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.QuizFormState
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 fun List<QuestionEntity>.replace(targetIndex: Int, state: QuizFormState, mediaState: MediaState): List<QuestionEntity>{
     return this.mapIndexed { index, question ->
@@ -43,4 +48,10 @@ fun getRelativePath(quizPath: String): String{
     else {
         return quizPath
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun Instant.formatToReadableDate(): String {
+    val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.systemDefault())
+    return formatter.format(this)
 }

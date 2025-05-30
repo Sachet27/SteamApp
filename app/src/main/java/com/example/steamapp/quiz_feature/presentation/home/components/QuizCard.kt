@@ -5,22 +5,16 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -30,19 +24,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
+import com.example.steamapp.core.util.formatToReadableDate
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
-import java.time.LocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -55,79 +48,73 @@ fun QuizCard(
     onDelete: ()->Unit,
     onIconClick: ()-> Unit
 ) {
-    val date= quiz.lastUpdatedAt.toDateString()
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)
-            .combinedClickable(
-                onClick = {onClick(quiz.quizId)},
+            .combinedClickable (
+                onClick = { onClick(quiz.quizId)},
                 onLongClick = onDelete
-            ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+            )
+        ,
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(0.5.dp, Color.Gray),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = modifier
-                .fillMaxSize()
-                .padding(10.dp)
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Row(
-                modifier = modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    modifier = Modifier.weight(0.8f),
+                    modifier = Modifier.weight(1f),
                     text = quiz.title,
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp
+                    lineHeight = 22.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+
                 IconButton(
-                    modifier = Modifier.weight(0.2f).height(34.dp),
-                    onClick = { onIconClick() }
-                ) {
+                    modifier = Modifier.size(40.dp),
+                    onClick = onIconClick) {
                     Icon(
                         imageVector = ImageVector.vectorResource(icon),
-                        contentDescription = "More options",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(25.dp)
+                        contentDescription = "More Options",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = quiz.description ?: "No description",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Box(
-                modifier= Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomStart
-            ){
-                Row(
-                    modifier= Modifier.fillMaxWidth().padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ){
-                    Text(
-                        text = "${quiz.questionCount} questions",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = "Last updated: ${date}",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
+            Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = quiz.description?: "No description.",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Questions: ${quiz.questionCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Updated: ${quiz.lastUpdatedAt.formatToReadableDate()}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -141,8 +128,8 @@ private fun QuizCardPreview() {
         QuizCard(
             quiz = Quiz(
                 quizId = 1,
-                title = "Mathematics Quiz and Science QUiz",
-                description = "Simple Quiz to test trigonometry".repeat(4),
+                title = "Science Quiz",
+                description = null,
                 lastUpdatedAt = Instant.now(),
                 questionCount = 8
             ),

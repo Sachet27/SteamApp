@@ -73,6 +73,27 @@ val AppTypography = Typography(
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
+    titleLarge = TextStyle(
+        fontFamily = Monsterrat,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.1.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = Monsterrat,
+        fontWeight = FontWeight.Medium,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = Monsterrat,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 22.sp,
+        letterSpacing = 0.1.sp
+    ),
     headlineLarge = TextStyle(
         fontFamily = Monsterrat,
         fontWeight = FontWeight.Bold,

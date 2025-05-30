@@ -23,7 +23,9 @@ import io.ktor.client.engine.cio.CIO
 
 val quizModule= module {
     single<QuizRepository> {
-        QuizRepositoryImpl(dao = get<QuizDatabase>().dao)
+        QuizRepositoryImpl(
+            dao = get<QuizDatabase>().quizDao,
+        )
     }
     single {
         Room.databaseBuilder(

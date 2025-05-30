@@ -5,6 +5,8 @@ import androidx.annotation.RequiresApi
 import com.example.steamapp.api.data.networking.dto.QuestionDto
 import com.example.steamapp.api.data.networking.dto.QuizDto
 import com.example.steamapp.api.data.networking.dto.QuizWithQuestionsDto
+import com.example.steamapp.api.data.networking.dto.ScoreDto
+import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.quiz_feature.data.local.entities.QuestionEntity
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
@@ -43,4 +45,19 @@ fun QuizWithQuestionsDto.toQuizWithQuestions(): QuizWithQuestions{
     )
 }
 
+fun Score.toScoreDto(): ScoreDto{
+    return ScoreDto(
+        Sachet = Sachet,
+        Nidhi = Nidhi,
+        Anjal = Anjal
+    )
+}
+
+fun ScoreDto.toScore(): Score{
+    return Score(
+        Sachet = Sachet,
+        Nidhi = Nidhi,
+        Anjal = Anjal
+    )
+}
 

@@ -8,7 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -173,6 +175,7 @@ fun RaspberryPiQuizzesScreen(
                         showAnswer=true
                     }
                 )
+                Spacer(Modifier.height(4.dp))
             }
         }
     }
@@ -184,7 +187,7 @@ fun RaspberryPiQuizzesScreen(
 private fun PiQuizPreview() {
     val dummyQuizList= listOf(
         Quiz(1, "Science quiz", null, Instant.now(), 5),
-        Quiz(2, "Mathematics quiz", "Simple quiz regarding mathematics", Instant.now(), 5),
+        Quiz(2, "Mathematics quiz and Social quiz", "Simple quiz regarding mathematics", Instant.now(), 5),
         Quiz(3, "English quiz", null, Instant.now(), 5),
     )
     SteamAppTheme {
