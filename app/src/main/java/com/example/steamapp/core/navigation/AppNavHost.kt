@@ -122,8 +122,8 @@ fun AppNavHost() {
                                 BottomNavItems.CREATE -> {
 
 
-//                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
-//                                    navController.navigate(NavRoutes.AddEditRoute)
+                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
+                                    navController.navigate(NavRoutes.AddEditRoute)
                                 }
                             }
                         },

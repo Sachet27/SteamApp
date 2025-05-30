@@ -5,7 +5,9 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
@@ -39,9 +42,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +57,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.example.steamapp.api.domain.models.Score
@@ -103,8 +110,6 @@ fun DisplayScreen(
     var lifecycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
-
-
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -122,8 +127,8 @@ fun DisplayScreen(
             QuizEditTopBar(
                 title = quizWithQuestions.quiz.title,
                 onSaveNote = {
-                    player.stop()
                     if(!showAnswer) {
+                        player.stop()
                         onAPIActions(APIActions.onExit)
                     }
                     onBackNav()
@@ -170,6 +175,7 @@ fun DisplayScreen(
                     enabled = questionIndex<= quizWithQuestions.questions.size-1,
                     onClick = {
                         if(questionIndex==quizWithQuestions.questions.size-1){
+                            player.stop()
                             if(!showAnswer){
                                 onAPIActions(APIActions.onFinish)
                                 onFetchScores()
@@ -195,89 +201,138 @@ fun DisplayScreen(
             }
 
         }
-           Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-               verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "${questionIndex+1}) ${quizWithQuestions.questions[questionIndex].title}",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(top= 16.dp, end= 16.dp, start = 16.dp, bottom = 65.dp),
+        ) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = "Question ${questionIndex + 1} of ${quizWithQuestions.quiz.questionCount}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Spacer(Modifier.height(16.dp))
+            quizWithQuestions.questions[questionIndex].imageRelativePath?.let{imagePath->
+                val file= File(context.filesDir, imagePath)
+                Log.d("Yeet: ","Image path: ${file.absolutePath}")
+
+                AsyncImage(
+                    model = file.absolutePath.toUri(),
+                    contentDescription = "Question Image",
+                    modifier = modifier
+                        .aspectRatio(4/3f)
+                        .clip(RoundedCornerShape(15.dp))
+                        .border(
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+                            RoundedCornerShape(15.dp)
+                        ),
+                    contentScale = ContentScale.FillWidth
                 )
-                Spacer(Modifier.height(16.dp))
-               quizWithQuestions.questions[questionIndex].imageRelativePath?.let{imagePath->
-                   val file= File(context.filesDir, imagePath)
-                   Log.d("Yeet: ","Image path: ${file.absolutePath}")
+                Spacer(Modifier.height(12.dp))
+            }
+            quizWithQuestions.questions[questionIndex].audioRelativePath?.let { audioPath->
+                val file= File(context.filesDir, audioPath)
+                onSetAudio(file)
+                AndroidView(
+                    factory = { context ->
+                        PlayerView(context).also {
+                            it.player= player
+                        }
+                    },
+                    update = {
+                        when (lifecycle) {
+                            Lifecycle.Event.ON_PAUSE -> {
+                                it.onPause()
+                                it.player?.pause()
+                            }
+                            Lifecycle.Event.ON_RESUME -> {
+                                it.onResume()
 
-                   AsyncImage(
-                       model = file.absolutePath.toUri(),
-                       contentDescription = "Question Image",
-                       modifier = modifier
-                           .aspectRatio(4/3f)
-                   )
-                   Spacer(Modifier.height(16.dp))
-               }
-               quizWithQuestions.questions[questionIndex].audioRelativePath?.let { audioPath->
-                   val file= File(context.filesDir, audioPath)
-                   onSetAudio(file)
-                   AndroidView(
-                       factory = { context ->
-                           PlayerView(context).also {
-                               it.player = player
-                           }
-                       },
-                       update = {
-                           when (lifecycle) {
-                               Lifecycle.Event.ON_PAUSE -> {
-                                   it.onPause()
-                                   it.player?.pause()
-                               }
-                               Lifecycle.Event.ON_RESUME -> {
-                                   it.onResume()
+                            }
+                            else -> Unit
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16 / 9f)
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                item{
+                    Text(
+                        text = quizWithQuestions.questions[questionIndex].title,
+                        style= MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
+                itemsIndexed(quizWithQuestions.questions[questionIndex].options){index, option->
+                    val optionNumber= when(index){
+                        0-> "A"
+                        1->"B"
+                        2->"C"
+                        3->"D"
+                        else -> ""
+                    }
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(15.dp))
+                            .border(
+                                BorderStroke(1.dp, if(showAnswer && index== quizWithQuestions.questions[questionIndex].correctOptionIndex)
+                                    Color.Green
+                                else MaterialTheme.colorScheme.secondary),
+                                RoundedCornerShape(15.dp)
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
 
-                               }
-                               else -> Unit
-                           }
-                       },
-                       modifier = Modifier
-                           .fillMaxWidth()
-                           .aspectRatio(16 / 9f)
-                   )
-
-
-               }
-               LazyColumn(
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .padding(8.dp)
-               ) {
-                   itemsIndexed(quizWithQuestions.questions[questionIndex].options){index, option->
-                       val optionNumber= when(index){
-                           0-> "A"
-                           1->"B"
-                           2->"C"
-                           3->"D"
-                           else -> ""
-                       }
-                       Row(
-                           modifier = modifier.fillMaxWidth(),
-                           verticalAlignment = Alignment.CenterVertically,
-                           horizontalArrangement = Arrangement.SpaceBetween
-                       ){
-                           Text(
-                               text = "$optionNumber) $option",
-                               style = MaterialTheme.typography.titleMedium,
-                               color= if(showAnswer && index == quizWithQuestions.questions[questionIndex].correctOptionIndex) Color.Green else MaterialTheme.colorScheme.onSurface
-                           )
-                       }
-                       Spacer(Modifier.height(12.dp))
-                   }
-               }
-           }
+                        ){
+                        Text(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 16.dp),
+                            text = "$optionNumber) $option",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
+                            color= if(showAnswer && index == quizWithQuestions.questions[questionIndex].correctOptionIndex) Color.Green else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
+        }
     }
 }
 
-
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+fun DisplayPreview(modifier: Modifier = Modifier) {
+    SteamAppTheme {
+        DisplayScreen(
+            player = ExoPlayer.Builder(LocalContext.current).build(),
+            quizWithQuestions = QuizWithQuestions(
+                quiz = QuizEntity(
+                    quizId = 1,
+                    title = "Mathematics quiz",
+                    description = null,
+                    lastUpdatedAt = Instant.now(),
+                    questionCount = 2
+                ),
+                questions = listOf(
+                    QuestionEntity(id = 1, title = "What is 2+2?", options = listOf("1","4","3","5"), correctOptionIndex = 1, imageRelativePath = null, audioRelativePath = null, quizId = 1),
+                    QuestionEntity(id = 2, title = "What is square root of 81??", options = listOf("1","2","9","5"), correctOptionIndex = 2, imageRelativePath = null, audioRelativePath = null, quizId = 1),
+                )
+            ),
+            onFetchScores = {  },
+            onBackNav = {},
+            showAnswer = false,
+            onSetAudio = {},
+            onAPIActions = {}
+        ) { }
+    }
+}

@@ -121,7 +121,7 @@ fun HomeScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
         ){
-            Spacer(Modifier.height(8.dp))
+//            Spacer(Modifier.height(8.dp))
             TabRow(
                 modifier = Modifier
                     .padding(horizontal = 4.dp)

@@ -12,11 +12,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.steamapp.R
 import com.example.steamapp.ui.theme.SteamAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,11 +34,14 @@ fun QuizEditTopBar(
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+        ),
         title = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontSize = 25.sp,
+                fontWeight = FontWeight.W500,
+                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 20.sp),
                 modifier = Modifier.padding(16.dp),
             )
         },

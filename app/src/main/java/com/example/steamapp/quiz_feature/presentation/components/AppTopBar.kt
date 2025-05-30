@@ -90,7 +90,7 @@ fun AppTopBar(
                     modifier = modifier.padding(4.dp),
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Thin, fontFamily = FontFamily(Font(R.font.montserrat_medium)), fontSize = 18.sp ,letterSpacing = 0.15.sp)){
-                            append("Welcome back,\n")
+                            append("Welcome back \uD83D\uDC4B\n")
                         }
                         withStyle(
                             style = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 22.sp, fontFamily = FontFamily(Font(R.font.montserrat_medium)), letterSpacing = 0.25.sp)

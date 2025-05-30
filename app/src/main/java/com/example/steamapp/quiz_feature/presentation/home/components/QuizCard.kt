@@ -93,7 +93,9 @@ fun QuizCard(
             }
             Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = quiz.description?: "No description.",
+                    text = if(!quiz.description.isNullOrBlank() ){
+                        quiz.description
+                    } else "No description.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.secondary,
                     maxLines = 2,

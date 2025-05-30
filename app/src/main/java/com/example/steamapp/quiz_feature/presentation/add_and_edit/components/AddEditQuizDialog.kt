@@ -1,19 +1,29 @@
 package com.example.steamapp.quiz_feature.presentation.add_and_edit.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
+import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.QuizFormState
+import com.example.steamapp.ui.theme.SteamAppTheme
+import java.time.Instant
 
 @Composable
 fun AddEditQuizDialog(
@@ -33,9 +43,13 @@ fun AddEditQuizDialog(
             onDismiss()
         },
         confirmButton = {
-            TextButton(onClick = {
-                onDismiss()
-            }) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    onDismiss()
+                },
+                shape = RoundedCornerShape(10.dp)
+            ) {
                 Text("Save")
             }
         },
@@ -44,7 +58,6 @@ fun AddEditQuizDialog(
                 Text(
                     text = "Title:",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontSize = 18.sp
                 )
                 Spacer(Modifier.height(4.dp))
                 OutlinedTextField(
@@ -55,14 +68,43 @@ fun AddEditQuizDialog(
                 Text(
                     text = "Description:",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontSize = 18.sp
                 )
                 Spacer(Modifier.height(4.dp))
                 OutlinedTextField(
                     value = state.quizDescription ?: "",
                     onValueChange = { onAction(QuizActions.onChangeQuizDescription(it)) },
+                    placeholder = {
+                        Text(
+                            text = "No description yet",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    },
+
                 )
             }
         }
     )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+private fun DialogPreview() {
+    SteamAppTheme {
+        AddEditQuizDialog(
+            state = QuizFormState(
+                quizWithQuestions = QuizWithQuestions(
+                    quiz = QuizEntity(
+                        quizId = 2,
+                        title = "My quiz",
+                        description = "",
+                        lastUpdatedAt = Instant.now(),
+                        questionCount = 0,
+                    ),
+                    questions = listOf()
+                )
+            ),
+            onAction = {},
+        ) { }
+    }
 }
