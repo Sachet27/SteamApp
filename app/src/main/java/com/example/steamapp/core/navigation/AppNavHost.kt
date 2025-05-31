@@ -1,13 +1,18 @@
 package com.example.steamapp.core.navigation
 
+import android.app.Activity.RESULT_OK
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,8 +34,12 @@ import com.example.steamapp.core.presentation.AddQuizOrMaterialDialog
 import com.example.steamapp.core.presentation.CustomScaffold
 import com.example.steamapp.core.presentation.ObserveAsEvents
 import com.example.steamapp.core.presentation.toString
+import com.example.steamapp.material_feature.domain.models.StudyMaterial
+import com.example.steamapp.material_feature.presentation.MaterialActions
 import com.example.steamapp.material_feature.presentation.home.MaterialScreen
 import com.example.steamapp.material_feature.presentation.MaterialViewModel
+import com.example.steamapp.material_feature.presentation.components.MaterialInfoDialog
+import com.example.steamapp.material_feature.presentation.display.DisplayPdfScreen
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.presentation.QuizActions
@@ -54,8 +63,11 @@ fun AppNavHost() {
         val authViewModel: AuthViewModel= koinViewModel()
         val materialViewModel: MaterialViewModel = koinViewModel()
 
+        val infoState by materialViewModel.infoState.collectAsStateWithLifecycle()
         val uploadState by apiViewModel.uploadState.collectAsStateWithLifecycle()
         val downloadState by apiViewModel.downloadState.collectAsStateWithLifecycle()
+        val materialUploadState by apiViewModel.materialUploadState.collectAsStateWithLifecycle()
+        val materialDownloadState by apiViewModel.materialDownloadState.collectAsStateWithLifecycle()
         val mediaState by quizViewModel.mediaState.collectAsStateWithLifecycle()
         val quizState by quizViewModel.quizState.collectAsStateWithLifecycle()
         val quizFormState by quizViewModel.quizFormState.collectAsStateWithLifecycle()
@@ -65,13 +77,17 @@ fun AppNavHost() {
         val materialState by materialViewModel.materialState.collectAsStateWithLifecycle()
 
 
+    // 0 -> Upload existing pdf, 1-> create new pdf
+    val selectMaterial by materialViewModel.selectedMaterial.collectAsStateWithLifecycle()
+    var actionCode by remember { mutableStateOf(0) }
     var selectedBottomNavBarItem by remember { mutableStateOf(BottomNavItems.QUIZ) }
+    var showMaterialUploadDialog by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
         val userId by authViewModel.userId.collectAsStateWithLifecycle(null)
         val scores by quizViewModel.scores.collectAsStateWithLifecycle()
     
-        val events = merge(quizViewModel.quizEvents, apiViewModel.events, authViewModel.events)
+        val events = merge(quizViewModel.quizEvents, apiViewModel.events, authViewModel.events, materialViewModel.events)
         val context = LocalContext.current
         ObserveAsEvents(events = events) { event ->
             when (event) {
@@ -81,6 +97,53 @@ fun AppNavHost() {
             }
         }
     val navController = rememberNavController()
+
+    val scannerLauncher= rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = {
+            if(it.resultCode == RESULT_OK){
+                materialViewModel.handleScanResult(
+                    it.data,
+                    context = context,
+                )
+            }
+        }
+    )
+
+    val uploadPdfLauncher= rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = {
+            it?.let {uri->
+                materialViewModel.onAction(MaterialActions.onInsertMaterial(uri = uri, context))
+            }
+        }
+    )
+
+    if(showMaterialUploadDialog){
+        MaterialInfoDialog(
+            infoState = infoState,
+            onAction = materialViewModel::onAction,
+            onDismiss = {
+                showMaterialUploadDialog=false
+                if(actionCode== 0){ //existing pdf
+
+                    uploadPdfLauncher.launch("application/pdf")
+
+                } else if(actionCode== 1){ //create new pdf
+
+                    materialViewModel.getStartScanIntent(
+                        context = context,
+                        onSuccess = {
+                            scannerLauncher.launch(IntentSenderRequest.Builder(it).build())
+                        },
+                        onError = {
+                            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
+            }
+        )
+    }
 
     if(showDialog){
         AddQuizOrMaterialDialog(
@@ -93,10 +156,14 @@ fun AppNavHost() {
                 showDialog= false
             },
             onUploadPdf = {
-
+                showDialog= false
+                actionCode= 0
+                showMaterialUploadDialog= true
             },
             onCreatePdf = {
-
+                showDialog= false
+                actionCode= 1
+                showMaterialUploadDialog= true
             },
             onActions = materialViewModel::onAction
         )
@@ -266,8 +333,35 @@ fun AppNavHost() {
                     ) {
                         MaterialScreen(
                             state = materialState,
-                            onMaterialAction = materialViewModel::onAction
+                            onMaterialAction = materialViewModel::onAction,
+                            onAPIActions = apiViewModel::onAction,
+                            uploadState = materialUploadState,
+                            downloadState = materialDownloadState,
+                            onNavToDisplayPdfScreen = {showAnswer->
+
+                            }
                         )
+                    }
+
+                    composable<NavRoutes.PdfDisplayRoute> {
+                        val args= it.toRoute<NavRoutes.PdfDisplayRoute>()
+                        val syncWithPi= !args.notSyncWithPi
+                        DisplayPdfScreen(
+                            modifier= Modifier,
+                            syncWithPi= syncWithPi,
+                            material= selectMaterial?: StudyMaterial(
+                                id = 0L,
+                                name = "No material",
+                                description = null,
+                                pdfUri = "",
+                                pages = 0
+                            ),
+                            onAPIActions= apiViewModel::onAction,
+                            onBackNav= {
+                                navController.popBackStack()
+                            }
+                        )
+
                     }
                 }
             }

@@ -45,6 +45,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
+import com.example.steamapp.api.presentation.APIActions
+import com.example.steamapp.api.presentation.UploadState
+import com.example.steamapp.api.presentation.components.DownloadState
 import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.material_feature.presentation.MaterialActions
 import com.example.steamapp.material_feature.presentation.MaterialState
@@ -59,7 +62,11 @@ import com.example.steamapp.ui.theme.SteamAppTheme
 fun MaterialScreen(
     modifier: Modifier = Modifier,
     state: MaterialState,
-    onMaterialAction: (MaterialActions)->Unit
+    onMaterialAction: (MaterialActions)->Unit,
+    onAPIActions: (APIActions)->Unit,
+    uploadState: UploadState,
+    downloadState: DownloadState,
+    onNavToDisplayPdfScreen: (Boolean)->Unit
 ) {
 
     var selectedIndex by remember{ mutableStateOf(0) }
@@ -128,12 +135,17 @@ fun MaterialScreen(
                 0-> MyMaterialsScreen(
                     modifier = Modifier.fillMaxSize(),
                     state = state,
-                    onMaterialAction= onMaterialAction
+                    onMaterialAction = onMaterialAction,
+                    uploadState = uploadState,
+                    onAPIAction = onAPIActions
                 )
                 1->{
                     RaspberryPiMaterialsScreen(
                         state = state,
-                        onMaterialActions = onMaterialAction
+                        onMaterialActions = onMaterialAction,
+                        downloadState = downloadState,
+                        onAPIActions = onAPIActions,
+                        onNavToDisplayPdfScreen = onNavToDisplayPdfScreen
                     ) 
                 }
             }
@@ -155,9 +167,15 @@ private fun MaterialPreview() {
         MaterialScreen(
             state = MaterialState(
                 isLoading = false,
-                materials = dummyList
+                myMaterials = dummyList,
+                piMaterials = emptyList()
             ),
-            onMaterialAction = {}
+            onMaterialAction = {},
+            onAPIActions = {},
+            uploadState = UploadState(),
+            downloadState = DownloadState(),
+            modifier = Modifier,
+            onNavToDisplayPdfScreen = {}
         )
     }
 }

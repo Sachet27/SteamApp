@@ -53,9 +53,10 @@ fun MyQuizzesScreen(
     onNavToEditScreen: ()->Unit
 ) {
     val context= LocalContext.current
-    var showUploadDialog by remember { mutableStateOf(false) }
     var pushedQuizId by remember { mutableStateOf<Long?>(null) }
     var pushedQuizName by remember { mutableStateOf<String?>(null) }
+
+    var showUploadDialog by remember { mutableStateOf(false) }
 
 
     if(showUploadDialog){

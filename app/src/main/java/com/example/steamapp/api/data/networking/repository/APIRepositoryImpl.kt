@@ -37,6 +37,7 @@ import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.Result
 import com.example.steamapp.core.util.networking.UploadStatus
 import com.example.steamapp.core.util.networking.map
+import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuiz
 import com.example.steamapp.quiz_feature.domain.models.Quiz
@@ -59,6 +60,7 @@ import io.ktor.http.contentType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.internal.ChannelFlow
 
 class APIRepositoryImpl(
     private val httpClient: HttpClient,
@@ -120,6 +122,83 @@ class APIRepositoryImpl(
             }
         }.map {
             it.toIntellectResponse()
+        }
+    }
+
+    override suspend fun getMaterials(): Result<List<StudyMaterial>, NetworkError> {
+        return safeCall<List<StudyMaterial>> {
+            httpClient.get(
+                urlString = constructQuizUrl("/materials")
+            )
+        }
+    }
+
+    override fun getMaterial(id: Long, name: String): Flow<DownloadStatus<Unit, NetworkError>> = channelFlow {
+        val downloadResponse= safeCall<Unit> {
+            val httpResponse= httpClient.get(
+                urlString = constructQuizUrl("/material/$id-${name.formatQuizName()}")
+            ){
+                onDownload { bytesSentTotal, totalBytes->
+                    if(totalBytes!=null && totalBytes>0L){
+                        send(DownloadStatus.Progress(ProgressUpdate(bytesSentTotal,totalBytes)))
+                    }
+                }
+            }
+            val bytes= httpResponse.readRawBytes()
+            val fileInfo= FileInfo(
+                name = "$id-${name.formatQuizName()}",
+                mimeType = "application/zip",
+                bytes = bytes
+            )
+            val saved= async {  fileManager.saveTempMaterialZipFile(fileInfo)}.await()
+            if(saved){
+                val status= async { fileManager.unzipMaterialFiles(fileInfo) }.await()
+                if(!status){
+                    send(DownloadStatus.ResultState(Result.Error(NetworkError.UNKNOWN)))
+                } else Log.d("Yeet","material zip file saved and unzipped")
+            }
+            httpResponse
+        }
+        send(DownloadStatus.ResultState(downloadResponse))
+    }
+
+    override fun pushMaterial(material: StudyMaterial): Flow<UploadStatus<Unit, NetworkError>> = channelFlow {
+        val zipped= async {  fileManager.zipMaterialFolder(
+            name = material.name,
+            id = material.id
+        )}.await()
+        if(zipped) {
+            val zipFileInfo = fileManager.getMaterialFileInfo(id = material.id, name = material.name)
+            val uploadResponse = safeCall<Unit> {
+                httpClient.submitFormWithBinaryData(
+                    url = constructQuizUrl("/material-upload"),
+                    formData = formData {
+                        append("file", zipFileInfo.bytes, Headers.build {
+                            append(HttpHeaders.ContentType, zipFileInfo.mimeType)
+                            append(HttpHeaders.ContentDisposition, "filename=${zipFileInfo.name}.zip")
+                            append(HttpHeaders.ContentLength, zipFileInfo.bytes.size.toString())
+                        })
+                    }
+                ) {
+                    method= HttpMethod.Post
+                    onUpload { bytesSentTotal, totalBytes ->
+                        if (totalBytes != null && totalBytes > 0L) {
+                            send(UploadStatus.Progress(ProgressUpdate(bytesSentTotal, totalBytes)))
+                        }
+                    }
+                }
+            }
+            send(UploadStatus.ResultState(uploadResponse))
+        }
+
+    }
+
+    override suspend fun deleteMaterialById(id: Long, name: String): EmptyResult<NetworkError> {
+        val fileName= "${id}-${name.formatQuizName()}"
+        return safeCall {
+            httpClient.delete(
+                urlString = constructQuizUrl("/material-delete/${fileName}")
+            )
         }
     }
 

@@ -19,6 +19,7 @@ import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.UploadStatus
 import com.example.steamapp.core.util.networking.onError
 import com.example.steamapp.core.util.networking.onSuccess
+import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuizEntity
@@ -44,6 +45,22 @@ import java.io.FileNotFoundException
 class APIViewModel (
     private val apiRepository: APIRepository
 ): ViewModel(){
+    private val _materialUploadState= MutableStateFlow(UploadState())
+    val materialUploadState= _materialUploadState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        UploadState()
+    )
+    private var materialUploadJob: Job?= null
+
+    private val _materialDownloadState= MutableStateFlow(DownloadState())
+    val materialDownloadState= _materialDownloadState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        DownloadState()
+    )
+    private var materialDownloadJob: Job? = null
+
     private val _uploadState= MutableStateFlow(UploadState())
     val uploadState= _uploadState.stateIn(
         viewModelScope,
@@ -98,6 +115,27 @@ class APIViewModel (
             APIActions.onPlayAudio -> {
                 playAudio()
             }
+
+            APIActions.onCancelMaterialDownload -> {
+                cancelMaterialDownload()
+            }
+            APIActions.onCancelMaterialUpload -> {
+                cancelMaterialUpload()
+            }
+            is APIActions.onDownloadMaterialFromPi -> {getMaterial(action.material)}
+            is APIActions.onPushMaterialToPi -> { pushMaterial(action.material)}
+            is APIActions.onPresentPdf -> {}
+            is APIActions.onDeleteMaterialFromPi -> {deletePiMaterial(action.material)}
+        }
+    }
+
+
+    private fun deletePiMaterial(material: StudyMaterial){
+        viewModelScope.launch(Dispatchers.IO) {
+            apiRepository.deleteMaterialById(
+                id = material.id,
+                name = material.name
+            )
         }
     }
 
@@ -349,6 +387,158 @@ class APIViewModel (
     private fun cancelDownload(){
         downloadJob?.cancel()
     }
+
+
+    private fun getMaterial(material: StudyMaterial){
+        downloadJob= apiRepository
+            .getMaterial(
+                id = material.id,
+                name = material.name
+            )
+            .onStart {
+                _materialDownloadState.update {
+                    it.copy(
+                        isUploading = true,
+                        isUploadComplete = false,
+                        error= null,
+                        progress = 0f,
+                    )
+                }
+            }
+            .onEach {downloadStatus->
+                when(downloadStatus){
+                    is DownloadStatus.Progress -> {
+                        _materialDownloadState.update {
+                            it.copy(
+                                progress = downloadStatus.progress.bytesSent/downloadStatus.progress.totalBytes.toFloat()
+                            )
+                        }
+                    }
+                    is DownloadStatus.ResultState -> {
+                        downloadStatus.result
+                            .onSuccess {
+                                Log.d("Yeet","Viewmodel: Download process finished")
+                            }
+                            .onError {error->
+                                _events.send(APIEvents.Error(error))
+                            }
+                    }
+                }
+            }
+            .onCompletion {cause->
+                Log.d("Yeet", "on Completition triggered")
+                if(cause==null){
+                    _materialDownloadState.update {
+                        it.copy(
+                            isUploading = false,
+                            isUploadComplete = true
+                        )
+                    }
+                } else if(cause is CancellationException){
+                    _materialDownloadState.update {
+                        it.copy(
+                            isUploading = false,
+                            isUploadComplete = false,
+                            error = "The download was cancelled.",
+                            progress = 0f
+                        )
+                    }
+                }
+            } .catch {cause ->
+                val message= when(cause){
+                    is OutOfMemoryError-> "Memory insufficient!"
+                    is FileNotFoundException-> "File not found!"
+                    is UnresolvedAddressException-> "No internet!"
+                    else -> "Something went wrong!"
+                }
+                _materialDownloadState.update {
+                    it.copy(
+                        isUploading = false,
+                        error = message
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun cancelMaterialDownload(){
+        materialDownloadJob?.cancel()
+    }
+
+
+    private fun pushMaterial(material: StudyMaterial){
+        uploadJob= apiRepository
+            .pushMaterial(material)
+            .onStart {
+                _materialUploadState.update {
+                    it.copy(
+                        isUploading = true,
+                        isUploadComplete = false,
+                        error= null,
+                        progress = 0f,
+                        uploadResponse = UploadResponse()
+                    )
+                }
+            }
+            .onEach { uploadStatus ->
+                when (uploadStatus) {
+                    is UploadStatus.Progress -> {
+                        _materialUploadState.update {
+                            it.copy(
+                                progress = uploadStatus.progress.bytesSent / uploadStatus.progress.totalBytes.toFloat()
+                            )
+                        }
+                    }
+                    is UploadStatus.ResultState -> {
+                        uploadStatus.result
+                            .onSuccess {response->
+                                Log.d("Yeet", "Result: Success")
+                            }
+                            .onError { error->
+                                _events.send(APIEvents.Error(error))
+                            }
+                    }
+                }
+            }
+            .onCompletion { cause->
+                if(cause==null){
+                    _materialUploadState.update {
+                        it.copy(
+                            isUploading = false,
+                            isUploadComplete = true
+                        )
+                    }
+                } else if(cause is CancellationException){
+                    _materialUploadState.update {
+                        it.copy(
+                            isUploading = false,
+                            isUploadComplete = false,
+                            error = "The upload was cancelled.",
+                            progress = 0f
+                        )
+                    }
+                }
+            } .catch {cause ->
+                val message= when(cause){
+                    is OutOfMemoryError-> "Memory insufficient!"
+                    is FileNotFoundException-> "File not found!"
+                    is UnresolvedAddressException-> "No internet!"
+                    else -> "Something went wrong!"
+                }
+                _materialUploadState.update {
+                    it.copy(
+                        isUploading = false,
+                        error = message
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun cancelMaterialUpload(){
+        materialUploadJob?.cancel()
+    }
+
 
     private fun deletePiQuiz(quizId: Long, quizName: String){
         viewModelScope.launch(Dispatchers.IO) {

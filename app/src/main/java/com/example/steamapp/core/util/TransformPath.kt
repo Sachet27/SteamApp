@@ -18,3 +18,23 @@ fun transformFilePath(filePath: String?, quizId: Long): String? {
     // Rebuild the path with the transformed parts
     return (parts.dropLast(2) + newParentDir + newFileName).joinToString("/")
 }
+
+fun transformMaterialFilePath(filePath: String, id: Long): String {
+    if(filePath.isBlank())
+        return filePath
+    // Split the path into directories and file name
+    val parts = filePath.split("/")
+    if (parts.size < 3) throw IllegalArgumentException("Invalid file path format")
+
+    // Extract the parent directory and file name
+    val parentDir = parts[parts.size - 2]
+    val fileName = parts.last()
+
+    // Transform the parent directory and file name
+    val newParentDir = "$id-$parentDir"
+    val newFileName = "${id}_$fileName"
+
+    // Rebuild the path with the transformed parts
+    return (parts.dropLast(2) + newParentDir + newFileName).joinToString("/")
+}
+

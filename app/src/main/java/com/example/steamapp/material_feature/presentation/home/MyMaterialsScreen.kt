@@ -1,6 +1,7 @@
 package com.example.steamapp.material_feature.presentation.home
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +18,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,24 +29,55 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
+import com.example.steamapp.api.presentation.APIActions
+import com.example.steamapp.api.presentation.UploadState
+import com.example.steamapp.api.presentation.components.UploadDialogBox
+import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.material_feature.presentation.MaterialActions
 import com.example.steamapp.material_feature.presentation.MaterialState
 import com.example.steamapp.material_feature.presentation.components.MaterialCard
+import com.example.steamapp.quiz_feature.presentation.QuizActions
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyMaterialsScreen(
+    uploadState: UploadState,
     modifier: Modifier = Modifier,
     state: MaterialState,
-    onMaterialAction: (MaterialActions)->Unit
+    onMaterialAction: (MaterialActions)->Unit,
+    onAPIAction: (APIActions)->Unit
 ) {
+    val context= LocalContext.current
+    var pushedMaterial by remember { mutableStateOf<StudyMaterial?>(null) }
+    var showUploadDialog by remember { mutableStateOf(false) }
+
+
+    if(showUploadDialog){
+        UploadDialogBox(
+            uploadState = uploadState,
+            onCancel = {
+                onAPIAction(APIActions.onCancelMaterialUpload)
+                val message= it?: "Upload was cancelled."
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                showUploadDialog= false
+            },
+            onDone = {
+                showUploadDialog = false
+                pushedMaterial?.let { material ->
+                    onMaterialAction(MaterialActions.onDeleteMaterial(material))
+                    pushedMaterial = null
+                }
+                onMaterialAction(MaterialActions.onRefreshMaterials)
+            }
+        )
+    }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
             .background(MaterialTheme.colorScheme.background)
     ) {
-        val context= LocalContext.current
 
         if(state.isLoading){
             Column(
@@ -59,7 +95,7 @@ fun MyMaterialsScreen(
                 )
             }
         }
-        else if(state.materials.isEmpty()){
+        else if(state.myMaterials.isEmpty()){
             Column(
                 modifier= Modifier
                     .fillMaxSize()
@@ -86,19 +122,26 @@ fun MyMaterialsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(state.materials){ material->
+                items(state.myMaterials, key= {it.id}){ material->
                     MaterialCard(
                         material = material,
                         icon = R.drawable.push_to_raspberry_pi_icon,
                         onClick = {
-
+                            //preview haala
                         },
                         onDelete = {
-
+                            onMaterialAction(MaterialActions.onDeleteMaterial(material))
                         },
                         onIconClick = {
-
-                        }
+                                 onMaterialAction(MaterialActions.onSelectMaterial(material.id){ material->
+                                    material?.let{
+                                        onAPIAction(APIActions.onPushMaterialToPi(it))
+                                        showUploadDialog= true
+                                        pushedMaterial= material
+                                    }
+                                }
+                                )
+                            }
                     )
                     Spacer(Modifier.height(4.dp))
                 }

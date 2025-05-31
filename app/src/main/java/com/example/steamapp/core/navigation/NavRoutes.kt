@@ -22,4 +22,6 @@ interface NavRoutes {
     @Serializable
     data object MaterialRoute: NavRoutes
 
+    @Serializable
+    data class PdfDisplayRoute(val notSyncWithPi: Boolean): NavRoutes
 }

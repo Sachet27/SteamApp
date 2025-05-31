@@ -308,31 +308,3 @@ fun DisplayScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview
-@Composable
-fun DisplayPreview(modifier: Modifier = Modifier) {
-    SteamAppTheme {
-        DisplayScreen(
-            player = ExoPlayer.Builder(LocalContext.current).build(),
-            quizWithQuestions = QuizWithQuestions(
-                quiz = QuizEntity(
-                    quizId = 1,
-                    title = "Mathematics quiz",
-                    description = null,
-                    lastUpdatedAt = Instant.now(),
-                    questionCount = 2
-                ),
-                questions = listOf(
-                    QuestionEntity(id = 1, title = "What is 2+2?", options = listOf("1","4","3","5"), correctOptionIndex = 1, imageRelativePath = null, audioRelativePath = null, quizId = 1),
-                    QuestionEntity(id = 2, title = "What is square root of 81??", options = listOf("1","2","9","5"), correctOptionIndex = 2, imageRelativePath = null, audioRelativePath = null, quizId = 1),
-                )
-            ),
-            onFetchScores = {  },
-            onBackNav = {},
-            showAnswer = false,
-            onSetAudio = {},
-            onAPIActions = {}
-        ) { }
-    }
-}
