@@ -54,7 +54,6 @@ import com.example.steamapp.ui.theme.SteamAppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
-    connected: Boolean,
     modifier: Modifier = Modifier,
     title: String?= null,
     userPfp: String?= null,
@@ -132,7 +131,6 @@ private fun TopBarPreview() {
             topBar = { AppTopBar(
                 onProfileClick = {},
                 onSignOut = {},
-                connected = true
             ) }
         ) {
             Surface(

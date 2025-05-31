@@ -58,18 +58,14 @@ import java.time.Instant
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    userId: String?,
-    onBottomItemClick: (BottomNavItems)->Unit,
     state: QuizState,
     uploadState: UploadState,
     downloadState: DownloadState,
     onAction: (QuizActions)-> Unit,
     onAPIAction: (APIActions)-> Unit,
     onNavToEditQuizScreen: ()->Unit,
-    onNavToAIScreen: ()->Unit,
     onConnectToPi: ()->Unit,
     onNavToDisplayScreen: (Boolean)->Unit,
-    onSignOut: ()->Unit
 ) {
 
     var selectedIndex by remember{ mutableStateOf(0) }
@@ -84,42 +80,10 @@ fun HomeScreen(
         }
     }
 
-
-
-    Scaffold (
-        bottomBar = {
-            AppBottomBar(
-                onClick = {},
-                selectedItemId = BottomNavItems.QUIZ,
-                items = BottomNavigationList.list,
-                onItemClick = {
-                    onBottomItemClick(it.id)
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    onNavToAIScreen()
-                }
-            ) {
-                Icon(imageVector = ImageVector.vectorResource( R.drawable.ask_ai_icon ), null)
-            }
-        },
-        topBar = {
-            AppTopBar(
-                title = userId,
-                connected = state.connectedToPi,
-                onProfileClick = {},
-                onSignOut = onSignOut,
-            ) 
-        }
-    ){ padding->
         Column(
             modifier= Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
         ){
 //            Spacer(Modifier.height(8.dp))
             TabRow(
@@ -191,7 +155,6 @@ fun HomeScreen(
                 }
             }
         }
-    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -214,10 +177,6 @@ private fun HomePreview() {
             onConnectToPi = {},
             downloadState = DownloadState(),
             onNavToDisplayScreen = {},
-            onBottomItemClick = { },
-            onNavToAIScreen = {},
-            onSignOut = {},
-            userId = "user1"
         )
     }
 }

@@ -7,4 +7,6 @@ sealed interface SubGraph {
     data object AuthRoute: SubGraph
     @Serializable
     data object QuizRoute: SubGraph
+    @Serializable
+    data object MaterialRoute: SubGraph
 }

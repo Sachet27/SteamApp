@@ -20,7 +20,7 @@ class MaterialViewModel(
     private val _materialState= MutableStateFlow(MaterialState())
     val materialState= _materialState
         .onStart {
-            getAllMaterials()
+//            getAllMaterials()
         }
         .stateIn(
             viewModelScope,
@@ -28,6 +28,9 @@ class MaterialViewModel(
             MaterialState()
         )
 
+    fun onAction(actions: MaterialActions){
+
+    }
 
 
     private fun getAllMaterials(){

@@ -11,8 +11,15 @@ interface NavRoutes {
     data class DisplayRoute(val showAnswer: Boolean): NavRoutes
     @Serializable
     data class ScoreRoute(val questionCount: Int): NavRoutes
+
+
     @Serializable
     data object AskAIRoute: NavRoutes
+
     @Serializable
     data object LoginRoute: NavRoutes
+
+    @Serializable
+    data object MaterialRoute: NavRoutes
+
 }

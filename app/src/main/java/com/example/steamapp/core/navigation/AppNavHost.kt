@@ -6,6 +6,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,8 +26,10 @@ import com.example.steamapp.auth.presentation.AuthActions
 import com.example.steamapp.auth.presentation.AuthResponse
 import com.example.steamapp.auth.presentation.AuthViewModel
 import com.example.steamapp.auth.presentation.login.LoginScreen
+import com.example.steamapp.core.presentation.CustomScaffold
 import com.example.steamapp.core.presentation.ObserveAsEvents
 import com.example.steamapp.core.presentation.toString
+import com.example.steamapp.material_feature.presentation.MaterialScreen
 import com.example.steamapp.material_feature.presentation.MaterialViewModel
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
@@ -60,6 +65,8 @@ fun AppNavHost() {
         val materialState by materialViewModel.materialState.collectAsStateWithLifecycle()
 
 
+    var selectedBottomNavBarItem by remember { mutableStateOf(BottomNavItems.QUIZ) }
+
         val userId by authViewModel.userId.collectAsStateWithLifecycle(null)
         val scores by quizViewModel.scores.collectAsStateWithLifecycle()
     
@@ -91,23 +98,7 @@ fun AppNavHost() {
 
             navigation<SubGraph.QuizRoute>(startDestination = NavRoutes.HomeRoute){
                 composable<NavRoutes.HomeRoute> {
-                    HomeScreen(
-                        userId= userId,
-                        state = quizState,
-                        onAction = quizViewModel::onAction,
-                        onNavToEditQuizScreen = {
-                            navController.navigate(NavRoutes.AddEditRoute)
-                        },
-                        uploadState = uploadState,
-                        onAPIAction = apiViewModel::onAction,
-                        onConnectToPi = {
-                            //wifi connection stuff halnu parxa
-                            quizViewModel.getAllRemoteQuizzes()
-                        },
-                        downloadState = downloadState,
-                        onNavToDisplayScreen = { showAnswer ->
-                            navController.navigate(NavRoutes.DisplayRoute(showAnswer))
-                        },
+                    CustomScaffold(
                         onBottomItemClick = {
                             when (it) {
                                 BottomNavItems.QUIZ -> {
@@ -117,27 +108,49 @@ fun AppNavHost() {
                                 }
 
                                 BottomNavItems.MATERIAL -> {
-
+                                    navController.navigate(SubGraph.MaterialRoute)
                                 }
+
                                 BottomNavItems.CREATE -> {
-
-
                                     quizViewModel.onAction(QuizActions.onLoadQuizData(null))
                                     navController.navigate(NavRoutes.AddEditRoute)
                                 }
                             }
+
                         },
                         onNavToAIScreen = { navController.navigate(NavRoutes.AskAIRoute) },
-                        onSignOut = {
-                            authViewModel.onAction(AuthActions.OnSignOut)
-                        }
-                    )
+                        userId = userId,
+                        onSignOut = { authViewModel.onAction(AuthActions.OnSignOut) },
+                        onSelectItem = {
+                            selectedBottomNavBarItem= it
+                        },
+                        selectedItem = selectedBottomNavBarItem
+                    ) {
+                        HomeScreen(
+                            state = quizState,
+                            onAction = quizViewModel::onAction,
+                            onNavToEditQuizScreen = {
+                                navController.navigate(NavRoutes.AddEditRoute)
+                            },
+                            uploadState = uploadState,
+                            onAPIAction = apiViewModel::onAction,
+                            onConnectToPi = {
+                                //wifi connection stuff halnu parxa
+                                quizViewModel.getAllRemoteQuizzes()
+                            },
+                            downloadState = downloadState,
+                            onNavToDisplayScreen = { showAnswer ->
+                                navController.navigate(NavRoutes.DisplayRoute(showAnswer))
+                            }
+                        )
+                    }
                 }
                 composable<NavRoutes.AddEditRoute> {
                     AddEditScreen(
                         state = quizFormState,
                         onAction = quizViewModel::onAction,
                         onBackNav = {
+                            selectedBottomNavBarItem= BottomNavItems.QUIZ
                             navController.popBackStack()
                         },
                         onStoreMedia = { contentUri, quizName, questionId, quizId ->
@@ -163,6 +176,7 @@ fun AppNavHost() {
                         ),
                         onBackNav = {
                             navController.popBackStack()
+                            selectedBottomNavBarItem= BottomNavItems.QUIZ
                         },
                         showAnswer = showAnswer,
                         onSetAudio = {
@@ -180,6 +194,7 @@ fun AppNavHost() {
                         state = aiQuestionState,
                         onAPIActions = apiViewModel::onAction,
                         onBackNav = {
+                            selectedBottomNavBarItem= BottomNavItems.QUIZ
                             navController.popBackStack()
                             apiViewModel.onAction(APIActions.onClearAIQuestionState)
                         },
@@ -201,7 +216,42 @@ fun AppNavHost() {
                         questionCount= questionCount
                     )
                 }
+            }
 
+            navigation<SubGraph.MaterialRoute>(startDestination = NavRoutes.MaterialRoute){
+
+                composable<NavRoutes.MaterialRoute> {
+                    CustomScaffold(
+                        onBottomItemClick = {
+                            when (it) {
+                                BottomNavItems.QUIZ -> {
+                                    navController.navigate(NavRoutes.HomeRoute) {
+                                        popUpTo(NavRoutes.HomeRoute) { inclusive = true }
+                                    }
+                                }
+
+                                BottomNavItems.MATERIAL -> {}
+                                BottomNavItems.CREATE -> {
+                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
+                                    navController.navigate(NavRoutes.AddEditRoute)
+                                }
+                            }
+
+                        },
+                        onNavToAIScreen = { navController.navigate(NavRoutes.AskAIRoute) },
+                        userId = userId,
+                        onSignOut = { authViewModel.onAction(AuthActions.OnSignOut) },
+                        onSelectItem = {
+                            selectedBottomNavBarItem= it
+                        },
+                        selectedItem = selectedBottomNavBarItem
+                    ) {
+                        MaterialScreen(
+                            state = materialState,
+                            onMaterialAction = materialViewModel::onAction
+                        )
+                    }
+                }
             }
         }
 }
