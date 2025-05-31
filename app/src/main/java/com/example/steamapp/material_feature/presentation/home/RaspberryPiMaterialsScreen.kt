@@ -1,5 +1,4 @@
-package com.example.steamapp.material_feature.presentation
-
+package com.example.steamapp.material_feature.presentation.home
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -22,20 +21,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
-import com.example.steamapp.material_feature.domain.models.StudyMaterial
+import com.example.steamapp.material_feature.presentation.MaterialActions
+import com.example.steamapp.material_feature.presentation.MaterialState
 import com.example.steamapp.material_feature.presentation.components.MaterialCard
-import com.example.steamapp.ui.theme.SteamAppTheme
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MaterialScreen(
+fun RaspberryPiMaterialsScreen(
     modifier: Modifier = Modifier,
     state: MaterialState,
-    onMaterialAction: (MaterialActions)->Unit
+    onMaterialActions: (MaterialActions)->Unit
 ) {
     Column(
         modifier = Modifier
@@ -76,7 +74,7 @@ fun MaterialScreen(
                     alpha = 0.8f
                 )
                 Text(
-                    text = "No Quizzes Yet.",
+                    text = "No Materials Yet.",
                     color = MaterialTheme.colorScheme.secondary,
                     fontSize = 16.sp
                 )
@@ -107,25 +105,5 @@ fun MaterialScreen(
             }
         }
 
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview
-@Composable
-private fun MaterialPreview() {
-    val dummyList= listOf(
-        StudyMaterial(id = 1, name = "Height and Distance", description = "Class 10, chapter 7", pdfUri = "hello/world", pages = 17),
-        StudyMaterial(id = 2, name = "Trigonometry", description = "Class 9, chapter 1", pdfUri = "hello/world2", pages = 20),
-        StudyMaterial(id = 3, name = "History of Nepal", description = "Class 8, chapter 3", pdfUri = "hello/world", pages = 9),
-    )
-    SteamAppTheme {
-        MaterialScreen(
-            state = MaterialState(
-                isLoading = false,
-                materials = dummyList
-            ),
-            onMaterialAction = {}
-        )
     }
 }

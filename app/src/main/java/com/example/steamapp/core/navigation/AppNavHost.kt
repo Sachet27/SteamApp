@@ -1,7 +1,6 @@
 package com.example.steamapp.core.navigation
 
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -26,10 +25,11 @@ import com.example.steamapp.auth.presentation.AuthActions
 import com.example.steamapp.auth.presentation.AuthResponse
 import com.example.steamapp.auth.presentation.AuthViewModel
 import com.example.steamapp.auth.presentation.login.LoginScreen
+import com.example.steamapp.core.presentation.AddQuizOrMaterialDialog
 import com.example.steamapp.core.presentation.CustomScaffold
 import com.example.steamapp.core.presentation.ObserveAsEvents
 import com.example.steamapp.core.presentation.toString
-import com.example.steamapp.material_feature.presentation.MaterialScreen
+import com.example.steamapp.material_feature.presentation.home.MaterialScreen
 import com.example.steamapp.material_feature.presentation.MaterialViewModel
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
@@ -66,6 +66,7 @@ fun AppNavHost() {
 
 
     var selectedBottomNavBarItem by remember { mutableStateOf(BottomNavItems.QUIZ) }
+    var showDialog by remember { mutableStateOf(false) }
 
         val userId by authViewModel.userId.collectAsStateWithLifecycle(null)
         val scores by quizViewModel.scores.collectAsStateWithLifecycle()
@@ -79,9 +80,28 @@ fun AppNavHost() {
                 }
             }
         }
+    val navController = rememberNavController()
 
+    if(showDialog){
+        AddQuizOrMaterialDialog(
+            onDismiss = {
+                showDialog= false
+            },
+            onCreateQuiz = {
+                quizViewModel.onAction(QuizActions.onLoadQuizData(null))
+                navController.navigate(NavRoutes.AddEditRoute)
+                showDialog= false
+            },
+            onUploadPdf = {
 
-        val navController = rememberNavController()
+            },
+            onCreatePdf = {
+
+            },
+            onActions = materialViewModel::onAction
+        )
+    }
+
 
         NavHost(navController = navController, startDestination = if(authState.isSignedIn is AuthResponse.Authenticated) SubGraph.QuizRoute else SubGraph.AuthRoute) {
             navigation<SubGraph.AuthRoute>(startDestination = NavRoutes.LoginRoute){
@@ -112,8 +132,7 @@ fun AppNavHost() {
                                 }
 
                                 BottomNavItems.CREATE -> {
-                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
-                                    navController.navigate(NavRoutes.AddEditRoute)
+                                    showDialog= true
                                 }
                             }
 
@@ -232,8 +251,7 @@ fun AppNavHost() {
 
                                 BottomNavItems.MATERIAL -> {}
                                 BottomNavItems.CREATE -> {
-                                    quizViewModel.onAction(QuizActions.onLoadQuizData(null))
-                                    navController.navigate(NavRoutes.AddEditRoute)
+                                    showDialog= true
                                 }
                             }
 
