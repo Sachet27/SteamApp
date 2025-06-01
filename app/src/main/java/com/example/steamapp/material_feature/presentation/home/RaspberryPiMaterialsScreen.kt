@@ -79,7 +79,6 @@ fun RaspberryPiMaterialsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
             .background(MaterialTheme.colorScheme.background)
     ) {
         if(state.isLoading){
@@ -125,7 +124,7 @@ fun RaspberryPiMaterialsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(state.myMaterials, key = {it.id}){ material->
+                items(state.piMaterials, key = {it.id}){ material->
                     MaterialCard(
                         material = material,
                         icon = R.drawable.presentation_icon,

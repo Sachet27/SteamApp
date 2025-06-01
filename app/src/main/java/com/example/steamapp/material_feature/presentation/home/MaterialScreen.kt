@@ -137,7 +137,8 @@ fun MaterialScreen(
                     state = state,
                     onMaterialAction = onMaterialAction,
                     uploadState = uploadState,
-                    onAPIAction = onAPIActions
+                    onAPIAction = onAPIActions,
+                    onNavToDisplayPdfScreen = onNavToDisplayPdfScreen
                 )
                 1->{
                     RaspberryPiMaterialsScreen(

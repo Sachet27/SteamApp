@@ -5,9 +5,11 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -90,6 +92,15 @@ class MaterialViewModel(
             }
             is MaterialActions.onSelectMaterial -> {selectMaterial(id = actions.id, callBack = actions.callBack)}
             is MaterialActions.onLoadDisplayMaterial -> {loadDisplayMaterial(actions.material)}
+            is MaterialActions.onRenderPages -> renderPages(actions.context, actions.material, actions.callBack)
+        }
+    }
+
+
+    private fun renderPages(context: Context, studyMaterial: StudyMaterial, callBack: ((List<Bitmap>) -> Unit)?){
+        viewModelScope.launch {
+            val pages= pdfBitmapConverter.pdfToBitmaps(studyMaterial.pdfUri.toUri())
+            callBack?.invoke(pages)
         }
     }
 

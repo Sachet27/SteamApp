@@ -176,6 +176,7 @@ fun AddEditScreen(
             Column(
                 modifier = modifier
                     .fillMaxSize()
+                    .padding(padding)
                     .background(MaterialTheme.colorScheme.surface),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -189,7 +190,7 @@ fun AddEditScreen(
             }
         } else {
             Box(
-                modifier = Modifier.fillMaxSize().padding(top= 8.dp, start = 8.dp, end= 8.dp, bottom = 20.dp),
+                modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.BottomCenter
             ){
                 Row(
@@ -398,7 +399,7 @@ fun AddEditScreen(
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -406,7 +407,7 @@ fun AddEditScreen(
                     Column(
                         modifier = Modifier
                             .weight(0.5f)
-                            .padding(8.dp),
+                            .padding(4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -438,7 +439,7 @@ fun AddEditScreen(
                     Column(
                         modifier = Modifier
                             .weight(0.5f)
-                            .padding(8.dp),
+                            .padding(4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(

@@ -304,9 +304,9 @@ fun AppNavHost() {
                 }
             }
 
-            navigation<SubGraph.MaterialRoute>(startDestination = NavRoutes.MaterialRoute){
+            navigation<SubGraph.MaterialRoute>(startDestination = NavRoutes.MaterialHomeRoute){
 
-                composable<NavRoutes.MaterialRoute> {
+                composable<NavRoutes.MaterialHomeRoute> {
                     CustomScaffold(
                         onBottomItemClick = {
                             when (it) {
@@ -337,32 +337,33 @@ fun AppNavHost() {
                             onAPIActions = apiViewModel::onAction,
                             uploadState = materialUploadState,
                             downloadState = materialDownloadState,
-                            onNavToDisplayPdfScreen = {showAnswer->
-
+                            onNavToDisplayPdfScreen = {notSyncWithPi->
+                                navController.navigate(NavRoutes.PdfDisplayRoute(notSyncWithPi))
                             }
                         )
                     }
+                }
 
-                    composable<NavRoutes.PdfDisplayRoute> {
-                        val args= it.toRoute<NavRoutes.PdfDisplayRoute>()
-                        val syncWithPi= !args.notSyncWithPi
-                        DisplayPdfScreen(
-                            modifier= Modifier,
-                            syncWithPi= syncWithPi,
-                            material= selectMaterial?: StudyMaterial(
-                                id = 0L,
-                                name = "No material",
-                                description = null,
-                                pdfUri = "",
-                                pages = 0
-                            ),
-                            onAPIActions= apiViewModel::onAction,
-                            onBackNav= {
-                                navController.popBackStack()
-                            }
-                        )
+                composable<NavRoutes.PdfDisplayRoute> {
+                    val args= it.toRoute<NavRoutes.PdfDisplayRoute>()
+                    val syncWithPi= !args.notSyncWithPi
+                    DisplayPdfScreen(
+                        modifier = Modifier,
+                        syncWithPi = syncWithPi,
+                        material = selectMaterial ?: StudyMaterial(
+                            id = 0L,
+                            name = "No material",
+                            description = null,
+                            pdfUri = "",
+                            pages = 0
+                        ),
+                        onAPIActions = apiViewModel::onAction,
+                        onBackNav = {
+                            navController.popBackStack()
+                        },
+                        onMaterialActions = materialViewModel::onAction
+                    )
 
-                    }
                 }
             }
         }

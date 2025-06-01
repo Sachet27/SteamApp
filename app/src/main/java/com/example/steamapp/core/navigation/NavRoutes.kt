@@ -20,7 +20,7 @@ interface NavRoutes {
     data object LoginRoute: NavRoutes
 
     @Serializable
-    data object MaterialRoute: NavRoutes
+    data object MaterialHomeRoute: NavRoutes
 
     @Serializable
     data class PdfDisplayRoute(val notSyncWithPi: Boolean): NavRoutes

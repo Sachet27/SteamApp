@@ -108,7 +108,7 @@ fun MaterialCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Questions: ${material.pages}",
+                    text = "Pages: ${material.pages}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )

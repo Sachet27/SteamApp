@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,13 +36,16 @@ fun QuizEditTopBar(
 ) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
         ),
         title = {
             Text(
                 text = title,
                 fontWeight = FontWeight.W500,
-                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 20.sp),
+                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
                 modifier = Modifier.padding(16.dp),
             )
         },
@@ -55,18 +59,16 @@ fun QuizEditTopBar(
             }
         },
         actions = {
-            TextButton(
+            IconButton(
                 onClick = {
                     onSaveNote()
                 }
             ) {
-                Text(
-                    text = "Done",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(8.dp)
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp)
                 )
-
             }
         }
     )

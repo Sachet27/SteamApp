@@ -45,7 +45,8 @@ fun MyMaterialsScreen(
     modifier: Modifier = Modifier,
     state: MaterialState,
     onMaterialAction: (MaterialActions)->Unit,
-    onAPIAction: (APIActions)->Unit
+    onAPIAction: (APIActions)->Unit,
+    onNavToDisplayPdfScreen: (Boolean)->Unit
 ) {
     val context= LocalContext.current
     var pushedMaterial by remember { mutableStateOf<StudyMaterial?>(null) }
@@ -127,7 +128,8 @@ fun MyMaterialsScreen(
                         material = material,
                         icon = R.drawable.push_to_raspberry_pi_icon,
                         onClick = {
-                            //preview haala
+                            onMaterialAction(MaterialActions.onLoadDisplayMaterial(material))
+                            onNavToDisplayPdfScreen(true)
                         },
                         onDelete = {
                             onMaterialAction(MaterialActions.onDeleteMaterial(material))
