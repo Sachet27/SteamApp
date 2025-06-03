@@ -44,7 +44,7 @@ import java.time.Instant
 fun MaterialCard(
     modifier: Modifier = Modifier,
     material: StudyMaterial,
-    @DrawableRes icon: Int,
+    @DrawableRes icon: Int?,
     onClick: (Long)-> Unit,
     onDelete: ()->Unit,
     onIconClick: ()-> Unit
@@ -80,15 +80,16 @@ fun MaterialCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                IconButton(
-                    modifier = Modifier.size(40.dp),
-                    onClick = onIconClick) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(icon),
-                        contentDescription = "More Options",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                icon?.let {
+                    IconButton(
+                        modifier = Modifier.size(40.dp),
+                        onClick = onIconClick) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(it),
+                            contentDescription = "More Options",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))

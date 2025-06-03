@@ -9,4 +9,13 @@ object BottomNavigationList {
             selectedIcon = it.toSelectedIcon(),
         )
     }
+
+    val studentList= BottomNavItems.studentList.map {
+        BottomNavigationItem(
+            id= it,
+            title = it.toTitle(),
+            unselectedIcon = it.toUnselectedIcon(),
+            selectedIcon = it.toSelectedIcon()
+        )
+    }
 }

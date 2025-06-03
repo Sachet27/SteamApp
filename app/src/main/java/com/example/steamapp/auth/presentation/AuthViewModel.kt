@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.presentation.APIEvents
+import com.example.steamapp.auth.domain.models.Role
 import com.example.steamapp.auth.domain.models.User
 import com.example.steamapp.auth.domain.repository.AuthRepository
 import com.example.steamapp.core.presentation.toString
@@ -20,7 +21,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -42,6 +42,10 @@ class AuthViewModel(
         it[userIdKey]
     }
 
+    val userRole= dataStore.data.map {
+        val userRoleKey= stringPreferencesKey("userRole")
+        it[userRoleKey]
+    }
 
     private val _authState= MutableStateFlow(AuthState())
 
@@ -60,6 +64,7 @@ class AuthViewModel(
             is AuthActions.OnPasswordChange -> {changePassword(actions.newPassword)}
             is AuthActions.OnSignInWithUserIdAndPassword -> {signIn(actions.context)}
             is AuthActions.OnSignOut -> {signOut()}
+            is AuthActions.OnChangeUserRole -> {changeRole(actions.newRole)}
         }
     }
 
@@ -81,6 +86,12 @@ class AuthViewModel(
         }
     }
 
+    private fun changeRole( newRole: Role){
+        _authState.update {
+            it.copy(userRole = newRole )
+        }
+    }
+
     private fun changeUserId( newUserId: String){
         _authState.update {
             it.copy(userId = newUserId)
@@ -93,6 +104,7 @@ class AuthViewModel(
                 it.copy(isSignedIn = AuthResponse.Unauthenticated)
             }
             saveUserData(null)
+            saveUserRole(null)
             dataStore.edit {
                 val isAuthenticated= booleanPreferencesKey("isAuthenticated")
                 it[isAuthenticated]= false
@@ -112,6 +124,18 @@ class AuthViewModel(
         return true
     }
 
+    private suspend fun saveUserRole(role: String?):Boolean{
+        dataStore.edit {
+            val userRoleKey= stringPreferencesKey("userRole")
+            if(role==null){
+                it.remove(userRoleKey)
+            } else{
+                it[userRoleKey]= role
+            }
+        }
+        return true
+    }
+
     private fun signIn(context: Context){
         _authState.update {
             it.copy(isLoading = true)
@@ -120,7 +144,8 @@ class AuthViewModel(
             authRepository.signInWithUserIdAndPassword(
                 User(
                     userId = _authState.value.userId,
-                    password = _authState.value.password
+                    password = _authState.value.password,
+                    role = _authState.value.userRole
                 )
             )
                 .onSuccess {response->
@@ -130,6 +155,9 @@ class AuthViewModel(
                             it[isAuthenticated]= true
                         }
                         val saved= async{saveUserData(_authState.value.userId)}.await()
+                        async {  saveUserRole(
+                            _authState.value.userRole.toString()
+                        )}.await()
                         if(saved){
                         _authState.update {
                                 it.copy(

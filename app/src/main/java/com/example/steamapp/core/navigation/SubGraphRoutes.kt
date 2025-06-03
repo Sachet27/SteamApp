@@ -9,4 +9,7 @@ sealed interface SubGraph {
     data object QuizRoute: SubGraph
     @Serializable
     data object MaterialRoute: SubGraph
+
+    @Serializable
+    data object StudentRoute: SubGraph
 }

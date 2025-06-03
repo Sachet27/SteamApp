@@ -24,4 +24,23 @@ interface NavRoutes {
 
     @Serializable
     data class PdfDisplayRoute(val notSyncWithPi: Boolean): NavRoutes
+
+    //for students
+    @Serializable
+    data object StudentHomeRoute: NavRoutes
+
+    @Serializable
+    data object StudentMaterialRoute: NavRoutes
+
+    @Serializable
+    data object StudentQuizTestRoute: NavRoutes
+
+    @Serializable
+    data class StudentTestQuizScoreRoute( val score: Int, val total: Int): NavRoutes
+
+    @Serializable
+    data object DummyPdfDisplay: NavRoutes
+
+    @Serializable
+    data object StudentAskAIRoute: NavRoutes
 }

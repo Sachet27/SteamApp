@@ -43,7 +43,7 @@ import java.time.Instant
 fun QuizCard(
     modifier: Modifier = Modifier,
     quiz: Quiz,
-    @DrawableRes icon: Int,
+    @DrawableRes icon: Int?,
     onClick: (Long)-> Unit,
     onDelete: ()->Unit,
     onIconClick: ()-> Unit
@@ -81,14 +81,16 @@ fun QuizCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
+                icon?.let {
                 IconButton(
                     modifier = Modifier.size(40.dp),
                     onClick = onIconClick) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(icon),
-                        contentDescription = "More Options",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                        Icon(
+                            imageVector = ImageVector.vectorResource(it),
+                            contentDescription = "More Options",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))

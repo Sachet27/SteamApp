@@ -109,7 +109,9 @@ class MaterialViewModel(
             it.copy(isLoading = true)
         }
         viewModelScope.launch (Dispatchers.IO){
-            val foundMaterial= async { fileManager.getMaterialFromJson(material.id, material.name) }.await()
+            val foundMaterial= async {
+                fileManager.getMaterialFromJson(material.id, material.name)
+            }.await()
             _selectedMaterial.update {
                 foundMaterial
             }
@@ -237,13 +239,15 @@ class MaterialViewModel(
                     id= id,
                     pdfUri = transformMaterialFilePath(material.pdfUri, id)
                 )
-                fileManager.saveMaterialJson(updatedMaterial)
-                fileManager.prefixFolderWithMaterialId(
-                    name = updatedMaterial.name,
-                    id = updatedMaterial.id
-                )
-                withContext(Dispatchers.Main){
-                    Toast.makeText(context, "Successfully added!", Toast.LENGTH_SHORT).show()
+                val saved= async {  fileManager.saveMaterialJson(updatedMaterial) }.await()
+                if(saved){
+                    fileManager.prefixFolderWithMaterialId(
+                        name = updatedMaterial.name,
+                        id = updatedMaterial.id
+                    )
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(context, "Successfully added!", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             _materialState.update {

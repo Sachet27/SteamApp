@@ -7,12 +7,10 @@ import com.example.steamapp.api.data.mappers.toAIAnswer
 import com.example.steamapp.api.data.mappers.toAIQuestionDTO
 import com.example.steamapp.api.data.mappers.toControlModeDto
 import com.example.steamapp.api.data.mappers.toDisplayDto
-import com.example.steamapp.api.data.mappers.toIntellectRequestDTO
-import com.example.steamapp.api.data.mappers.toIntellectResponse
 import com.example.steamapp.api.data.mappers.toQuizEntity
 import com.example.steamapp.api.data.mappers.toScore
 import com.example.steamapp.api.data.networking.dto.AIAnswerDto
-import com.example.steamapp.api.data.networking.dto.IntellectResponseDto
+import com.example.steamapp.api.data.networking.dto.AnswerStyleResponseDto
 import com.example.steamapp.api.data.networking.dto.QuizDto
 import com.example.steamapp.api.data.networking.dto.ScoreDto
 import com.example.steamapp.api.data.networking.models.ProgressUpdate
@@ -20,10 +18,11 @@ import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
 import com.example.steamapp.api.domain.models.AIAnswer
 import com.example.steamapp.api.domain.models.AIQuestion
+import com.example.steamapp.api.domain.models.AnswerStyle
+import com.example.steamapp.api.domain.models.AnswerStyleRequest
+import com.example.steamapp.api.domain.models.AnswerStyleResponse
 import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.api.domain.models.FileInfo
-import com.example.steamapp.api.domain.models.IntellectRequest
-import com.example.steamapp.api.domain.models.IntellectResponse
 import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.core.data.internal_storage.FileManager
@@ -60,7 +59,6 @@ import io.ktor.http.contentType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.internal.ChannelFlow
 
 class APIRepositoryImpl(
     private val httpClient: HttpClient,
@@ -112,18 +110,6 @@ class APIRepositoryImpl(
         }
     }
 
-    override suspend fun selectIntellectLevel(intellect: IntellectRequest, user_id: String): Result<IntellectResponse, NetworkError> {
-        return safeCall<IntellectResponseDto> {
-            httpClient.put(
-                urlString = constructAIUrl("/user/$user_id")
-            ){
-                contentType(ContentType.Application.Json)
-                setBody(intellect.toIntellectRequestDTO())
-            }
-        }.map {
-            it.toIntellectResponse()
-        }
-    }
 
     override suspend fun getMaterials(): Result<List<StudyMaterial>, NetworkError> {
         return safeCall<List<StudyMaterial>> {

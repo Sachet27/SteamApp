@@ -48,7 +48,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.steamapp.R
-import com.example.steamapp.api.domain.models.Intellect
+import com.example.steamapp.api.domain.models.AnswerStyle
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.components.QuizEditTopBar
 import com.example.steamapp.ui.theme.SteamAppTheme
 
@@ -97,14 +97,14 @@ fun AskAIScreen(
                    .padding(padding)
                    .padding(top= 12.dp, start = 12.dp, end= 12.dp, bottom= 70.dp)
            ) {
-               Text("Select an intellect level:")
+               Text("Select a style:")
                Spacer(Modifier.height(8.dp))
                Row(
                    modifier = Modifier.fillMaxWidth(),
                    verticalAlignment = Alignment.CenterVertically,
                    horizontalArrangement = Arrangement.SpaceAround
                ){
-                   Intellect.list.forEachIndexed { index, intellect ->
+                   AnswerStyle.list.forEachIndexed { index, answerStyle ->
                        val selected= index == selectedChipIndex
                        AssistChip(
                            colors = AssistChipDefaults.assistChipColors(
@@ -113,13 +113,12 @@ fun AskAIScreen(
                            ),
                            onClick = {
                                selectedChipIndex= index
-                               onAPIActions(APIActions.onSelectIntellectLevel( userId= userId, intellect = Intellect.list[selectedChipIndex]))
+                               onAPIActions(APIActions.onSelectAnswerStyle( userId= userId, answerStyle = AnswerStyle.list[selectedChipIndex]))
                            },
                            label = {
-                               val label= when(intellect){
-                                   Intellect.LOW -> "LOW"
-                                   Intellect.NORMAL -> "NORMAL"
-                                   Intellect.HIGH -> "HIGH"
+                               val label= when(answerStyle){
+                                   AnswerStyle.THINK -> "THINK"
+                                   AnswerStyle.NO_THINK -> "DON'T THINK"
                                }
                                Text(
                                    text= label
@@ -219,7 +218,8 @@ fun AskAIScreen(
                         onAPIActions(APIActions.onClearAIQuestionState)
                         onAPIActions(APIActions.onAskOllama(
                             userId = userId,
-                            question = question
+                            question = question,
+                            think = selectedChipIndex== 0
                         ))
                     }
                 ) {

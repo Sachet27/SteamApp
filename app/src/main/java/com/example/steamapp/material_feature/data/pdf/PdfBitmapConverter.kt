@@ -25,7 +25,6 @@ class PdfBitmapConverter(
         return withContext(Dispatchers.IO){
             renderer?.close()
             val file= File(context.filesDir, uri.toString())
-            Log.d("Yeet", file.absolutePath)
             val descriptor= ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
                 with(PdfRenderer(descriptor)){
                     renderer= this

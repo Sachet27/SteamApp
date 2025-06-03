@@ -6,16 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.data.mappers.toUploadResponse
 import com.example.steamapp.api.domain.models.AIQuestion
 import com.example.steamapp.api.domain.models.Action
+import com.example.steamapp.api.domain.models.AnswerStyle
+import com.example.steamapp.api.domain.models.AnswerStyleRequest
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.domain.models.Display
-import com.example.steamapp.api.domain.models.Intellect
-import com.example.steamapp.api.domain.models.IntellectRequest
 import com.example.steamapp.api.domain.models.UploadResponse
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.api.presentation.components.DownloadState
 import com.example.steamapp.core.util.formatQuizName
 import com.example.steamapp.core.util.networking.DownloadStatus
-import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.UploadStatus
 import com.example.steamapp.core.util.networking.onError
 import com.example.steamapp.core.util.networking.onSuccess
@@ -23,7 +22,6 @@ import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.quiz_feature.data.local.entities.QuizEntity
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuizEntity
-import com.example.steamapp.quiz_feature.domain.models.Quiz
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -85,7 +83,6 @@ class APIViewModel (
             AIQuestionState()
     )
 
-
     private val _events= Channel<APIEvents>()
     val events= _events.receiveAsFlow()
 
@@ -100,8 +97,9 @@ class APIViewModel (
                 presentQuizOnPi(action.quizId, action.quizName)
             }
 
-            is APIActions.onAskOllama -> {askOllamaAI(action.userId, action.question)}
-            is APIActions.onSelectIntellectLevel -> {selectIntellectLevel(action.userId, action.intellect)}
+            is APIActions.onAskOllama -> {askOllamaAI(action.userId, action.question, action.think)}
+            is APIActions.onSelectAnswerStyle -> {
+            }
             is APIActions.onClearAIQuestionState -> {clearAIState()}
             APIActions.onExit -> {
                 exitDisplay()
@@ -496,6 +494,7 @@ class APIViewModel (
                             }
                             .onError { error->
                                 _events.send(APIEvents.Error(error))
+                                Log.d("Yeet", error.toString())
                             }
                     }
                 }
@@ -546,30 +545,8 @@ class APIViewModel (
         }
     }
 
-    private fun selectIntellectLevel(userId: String, intellect: Intellect ){
-        _aiQuestionState.update {
-            it.copy(isLoading = true)
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            apiRepository.selectIntellectLevel(
-                intellect = IntellectRequest(intellect),
-                user_id = userId
-            )
-                .onSuccess {response->
-                    _aiQuestionState.update {
-                        it.copy(isLoading = false, intellect = response.intellect)
-                    }
-                }
-                .onError {
-                    _events.send(APIEvents.Error(it))
-                    _aiQuestionState.update {
-                        it.copy(isLoading = false)
-                    }
-                }
-        }
-    }
 
-    private fun askOllamaAI(userId: String, question: String){
+    private fun askOllamaAI(userId: String, question: String, think: Boolean){
         _aiQuestionState.update {
             it.copy(isLoading = true, question = question)
         }
@@ -577,7 +554,8 @@ class APIViewModel (
             apiRepository.askQuestion(
                 AIQuestion(
                     userId = userId,
-                    question = question
+                    question = question,
+                    think = think
                 )
             )
                 .onSuccess {answer->
@@ -596,7 +574,7 @@ class APIViewModel (
 
     private fun clearAIState(){
         _aiQuestionState.update {
-            it.copy(isLoading = false, question = null, answer = null)
+            it.copy(isLoading = false, question = null, answer = null, think = false)
         }
     }
 

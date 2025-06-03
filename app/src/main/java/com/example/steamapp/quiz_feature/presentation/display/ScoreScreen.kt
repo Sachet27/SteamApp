@@ -35,7 +35,7 @@ fun ScoreScreen(
         )
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "Sachet: ${score.Sachet}",
+            text = "Sachet: ${score.Sachet} / $questionCount",
             style= MaterialTheme.typography.headlineMedium
         )
        LinearProgressIndicator(
@@ -48,7 +48,7 @@ fun ScoreScreen(
 
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "Nidhi: ${score.Nidhi}",
+            text = "Nidhi: ${score.Nidhi} / $questionCount",
             style= MaterialTheme.typography.headlineMedium
         )
         LinearProgressIndicator(
@@ -61,7 +61,7 @@ fun ScoreScreen(
 
         Spacer(Modifier.height(10.dp))
         Text(
-            text = "Anjal: ${score.Anjal}",
+            text = "Anjal: ${score.Anjal} / $questionCount",
             style= MaterialTheme.typography.headlineMedium
         )
         LinearProgressIndicator(

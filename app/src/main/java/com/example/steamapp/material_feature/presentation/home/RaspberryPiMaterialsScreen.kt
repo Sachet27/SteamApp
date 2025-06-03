@@ -97,7 +97,7 @@ fun RaspberryPiMaterialsScreen(
                 )
             }
         }
-        else if(state.myMaterials.isEmpty()){
+        else if(state.piMaterials.isEmpty()){
             Column(
                 modifier= Modifier
                     .fillMaxSize()
@@ -124,7 +124,7 @@ fun RaspberryPiMaterialsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(state.piMaterials, key = {it.id}){ material->
+                items(state.piMaterials){ material->
                     MaterialCard(
                         material = material,
                         icon = R.drawable.presentation_icon,

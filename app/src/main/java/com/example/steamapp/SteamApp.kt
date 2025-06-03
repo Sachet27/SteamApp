@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.steamapp.di.authModule
 import com.example.steamapp.di.materialModule
 import com.example.steamapp.di.quizModule
+import com.example.steamapp.di.studentModule
 import io.ktor.client.plugins.logging.LogLevel
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -17,7 +18,7 @@ class SteamApp: Application() {
         startKoin{
             androidContext(this@SteamApp)
             androidLogger(Level.DEBUG)
-            modules(quizModule, authModule, materialModule)
+            modules(quizModule, authModule, materialModule, studentModule)
         }
     }
 }

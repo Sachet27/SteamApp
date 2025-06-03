@@ -1,6 +1,6 @@
 package com.example.steamapp.api.presentation
 
-import com.example.steamapp.api.domain.models.Intellect
+import com.example.steamapp.api.domain.models.AnswerStyle
 import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Quiz
@@ -31,7 +31,7 @@ sealed class APIActions() {
 
 
     //ai model
-    data class onAskOllama(val userId: String, val question: String): APIActions()
-    data class onSelectIntellectLevel(val userId: String, val intellect: Intellect): APIActions()
+    data class onAskOllama(val userId: String, val question: String, val think: Boolean): APIActions()
+    data class onSelectAnswerStyle(val userId: String, val answerStyle: AnswerStyle): APIActions()
     data object onClearAIQuestionState: APIActions()
 }

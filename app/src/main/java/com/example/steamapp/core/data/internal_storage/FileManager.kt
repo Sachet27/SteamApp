@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.webkit.MimeTypeMap
+import com.example.steamapp.R
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.core.util.formatQuizName
 import com.example.steamapp.material_feature.domain.models.StudyMaterial
@@ -330,16 +331,16 @@ class FileManager(
         }
     }
 
-    fun saveMaterialJson(material: StudyMaterial){
+    fun saveMaterialJson(material: StudyMaterial):Boolean{
         val folderName= if(material.id== 0L)
             material.name.formatQuizName()
         else updateFolderName(quizId = material.id, rawQuizName = material.name)
         val materialJsonString= Json.encodeToString(StudyMaterial.serializer() ,material)
-        Log.d("Yeet" , "Save Material Json: $materialJsonString")
         val folder= File(context.filesDir, "/materials/$folderName")
         if(!folder.exists()){
             folder.mkdirs()
         }
+        Log.d("Yeet", folder.absolutePath)
         val jsonFile= File(folder, "material.json")
         if(jsonFile.exists()){
             if(!deleteFile(jsonFile)){
@@ -347,6 +348,7 @@ class FileManager(
             }
         }
         jsonFile.writeText(materialJsonString)
+        return true
     }
 
     fun prefixFolderWithMaterialId(name: String, id:Long){
@@ -491,7 +493,34 @@ class FileManager(
         return folder.delete()
     }
 
+    fun pushDummyMaterials(): Boolean{
+        val resources= listOf(
+            R.raw.chloroplast to "chloroplast.jpg",
+            R.raw.personification to "personification.jpg",
+            R.raw.right_angled_triangle to "right_angled_triangle.jpeg",
+            R.raw.sulking to "sulking.mp3",
+            R.raw.photosynthesis to "photosynthesis.mp3",
+            R.raw.animal_kingdom to "animal_kingdom.pdf",
+            R.raw.prepositions to "prepositions.pdf",
+            R.raw.trigonometry to "trigonometry.pdf"
+        )
+        val folder= File(context.filesDir, "dummy")
+        if(folder.exists()) return true
 
-
+        folder.mkdirs()
+        for(resource in resources){
+            try{
+                val inputStream= context.resources.openRawResource(resource.first)
+                val file= File(folder, resource.second)
+                FileOutputStream(file).use{ outputStream->
+                    inputStream.copyTo(outputStream)
+                }
+            } catch (e: Exception){
+                e.printStackTrace()
+                return false
+            }
+        }
+         return true
+    }
 
 }

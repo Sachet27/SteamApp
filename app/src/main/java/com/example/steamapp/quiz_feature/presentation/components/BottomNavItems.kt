@@ -1,13 +1,12 @@
 package com.example.steamapp.quiz_feature.presentation.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.steamapp.R
 
 enum class BottomNavItems {
     QUIZ, MATERIAL, CREATE;
     companion object{
         val list= listOf(QUIZ, CREATE, MATERIAL)
+        val studentList= listOf(QUIZ,MATERIAL)
     }
 }
 

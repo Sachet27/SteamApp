@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UserDto(
     val user_id: String,
-    val password: String
+    val password: String,
+    val role: String
 )

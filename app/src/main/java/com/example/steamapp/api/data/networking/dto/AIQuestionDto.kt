@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AIQuestionDto (
     val user_id: String,
-    val question: String
+    val question: String,
+    val think: Boolean
 )
