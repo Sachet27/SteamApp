@@ -10,7 +10,6 @@ import com.example.steamapp.api.data.mappers.toDisplayDto
 import com.example.steamapp.api.data.mappers.toQuizEntity
 import com.example.steamapp.api.data.mappers.toScore
 import com.example.steamapp.api.data.networking.dto.AIAnswerDto
-import com.example.steamapp.api.data.networking.dto.AnswerStyleResponseDto
 import com.example.steamapp.api.data.networking.dto.QuizDto
 import com.example.steamapp.api.data.networking.dto.ScoreDto
 import com.example.steamapp.api.data.networking.models.ProgressUpdate
@@ -18,9 +17,6 @@ import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.data.networking.dto.UploadResponseDto
 import com.example.steamapp.api.domain.models.AIAnswer
 import com.example.steamapp.api.domain.models.AIQuestion
-import com.example.steamapp.api.domain.models.AnswerStyle
-import com.example.steamapp.api.domain.models.AnswerStyleRequest
-import com.example.steamapp.api.domain.models.AnswerStyleResponse
 import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.api.domain.models.FileInfo
 import com.example.steamapp.api.domain.models.Score
@@ -40,6 +36,7 @@ import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.mappers.toQuiz
 import com.example.steamapp.quiz_feature.domain.models.Quiz
+import com.example.steamapp.student.StudentDetail
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.plugins.onUpload
@@ -184,6 +181,15 @@ class APIRepositoryImpl(
         return safeCall {
             httpClient.delete(
                 urlString = constructQuizUrl("/material-delete/${fileName}")
+            )
+        }
+    }
+
+    override suspend fun getStudentReport(name: String): Result<StudentDetail, NetworkError> {
+        val formattedName= name.replace(" ", "-")
+        return safeCall<StudentDetail> {
+            httpClient.get(
+                urlString = constructQuizUrl("/student-performance/$formattedName")
             )
         }
     }

@@ -95,6 +95,9 @@ fun DisplayPdfScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
+                            if(syncWithPi){
+                                onAPIActions(APIActions.onExit)
+                            }
                             onBackNav()
                         }
                     ) {
@@ -143,6 +146,9 @@ fun DisplayPdfScreen(
                     IconButton(
                         enabled = pageIndex>0,
                         onClick = {
+                            if(syncWithPi){
+                                onAPIActions(APIActions.onPrevious)
+                            }
                             pageIndex--
                         }
                     ) {
@@ -161,12 +167,15 @@ fun DisplayPdfScreen(
                     IconButton(
                         enabled = pageIndex < material.pages-1,
                         onClick = {
+                            if(syncWithPi){
+                                onAPIActions(APIActions.onNext)
+                            }
                             pageIndex++
                         }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = "previous",
+                            contentDescription = "next",
                         )
                     }
 

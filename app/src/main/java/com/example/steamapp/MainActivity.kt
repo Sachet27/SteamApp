@@ -54,8 +54,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: QuizViewModel= koinViewModel()
-            val state by viewModel.quizState.collectAsStateWithLifecycle()
             SteamAppTheme {
                     AppNavHost()
             }

@@ -7,6 +7,9 @@ import org.koin.dsl.module
 
 val studentModule= module {
     scope<SubGraph.StudentRoute> {
-        viewModel { StudentViewModel(get()) }
+        viewModel { StudentViewModel(
+            apiRepository = get(),
+            fileManager = get()
+        ) }
     }
 }

@@ -1,27 +1,20 @@
 package com.example.steamapp.quiz_feature.presentation.home
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -39,18 +32,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.steamapp.R
 import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.UploadState
 import com.example.steamapp.api.presentation.components.DownloadState
-import com.example.steamapp.quiz_feature.data.local.entities.relations.QuizWithQuestions
 import com.example.steamapp.quiz_feature.domain.models.Quiz
 import com.example.steamapp.quiz_feature.presentation.QuizActions
 import com.example.steamapp.quiz_feature.presentation.QuizState
-import com.example.steamapp.quiz_feature.presentation.components.AppBottomBar
-import com.example.steamapp.quiz_feature.presentation.components.AppTopBar
-import com.example.steamapp.quiz_feature.presentation.components.BottomNavItems
-import com.example.steamapp.quiz_feature.presentation.components.BottomNavigationList
 import com.example.steamapp.ui.theme.SteamAppTheme
 import java.time.Instant
 
@@ -81,7 +68,7 @@ fun HomeScreen(
     }
 
         Column(
-            modifier= Modifier
+            modifier= modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ){

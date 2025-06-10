@@ -502,16 +502,18 @@ class FileManager(
             R.raw.photosynthesis to "photosynthesis.mp3",
             R.raw.animal_kingdom to "animal_kingdom.pdf",
             R.raw.prepositions to "prepositions.pdf",
-            R.raw.trigonometry to "trigonometry.pdf"
+            R.raw.trigonometry to "trigonometry.pdf",
+            R.raw.acids_and_bases to "acids_and_bases.mp4"
         )
         val folder= File(context.filesDir, "dummy")
-        if(folder.exists()) return true
-
-        folder.mkdirs()
+        if(!folder.exists()){
+            folder.mkdirs()
+        }
         for(resource in resources){
             try{
                 val inputStream= context.resources.openRawResource(resource.first)
                 val file= File(folder, resource.second)
+                if(file.exists()) continue
                 FileOutputStream(file).use{ outputStream->
                     inputStream.copyTo(outputStream)
                 }

@@ -215,6 +215,14 @@ object DummyQuizWithQuestions {
             pdfUri = "/dummy/animal_kingdom.pdf",
             pages = 9
         ),
+        StudyMaterial(
+            id = 4,
+            name = "Acids and bases",
+            description = "Simple video about acids and bases",
+            pdfUri = "/dummy/acids_and_bases.mp4",
+            pages = 0,
+            materialType = MaterialType.VIDEO
+        )
     )
 
 

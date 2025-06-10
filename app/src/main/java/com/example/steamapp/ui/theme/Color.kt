@@ -2,6 +2,9 @@ package com.example.steamapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+
+val yellowish= Color(0xFFFFEE8C)
+
 val primaryLight = Color(0xFF5C899D)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFF4D7B8E)

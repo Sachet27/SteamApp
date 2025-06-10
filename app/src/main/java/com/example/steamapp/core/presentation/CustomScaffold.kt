@@ -25,6 +25,7 @@ fun CustomScaffold(
     onNavToAIScreen: ()->Unit,
     userId: String?,
     onSignOut: ()->Unit,
+    onStudentListClick: ()->Unit,
     onSelectItem: (BottomNavItems)-> Unit,
     content: @Composable ()->Unit
 ) {
@@ -55,6 +56,8 @@ fun CustomScaffold(
                 title = userId,
                 onProfileClick = {},
                 onSignOut = onSignOut,
+                userPfp = null,
+                onStudentListClick = onStudentListClick,
             )
         }
     ){padding->

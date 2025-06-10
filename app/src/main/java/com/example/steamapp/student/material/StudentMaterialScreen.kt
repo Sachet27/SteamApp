@@ -20,6 +20,7 @@ import com.example.steamapp.material_feature.presentation.components.MaterialCar
 import com.example.steamapp.material_feature.presentation.home.MaterialScreen
 import com.example.steamapp.quiz_feature.domain.mappers.toQuiz
 import com.example.steamapp.quiz_feature.presentation.home.components.QuizCard
+import com.example.steamapp.student.quiz.domain.models.MaterialType
 import com.example.steamapp.student.quiz.presentation.StudentQuizActions
 import com.example.steamapp.student.quiz.presentation.StudentQuizState
 
@@ -29,7 +30,8 @@ fun StudentMaterialScreen(
     modifier: Modifier = Modifier,
     state: StudentQuizState,
     onAction: (StudentQuizActions)->Unit,
-    onNavToDisplayPdfScreen: ()->Unit
+    onNavToDisplayPdfScreen: ()->Unit,
+    onNavToVideoScreen: ()->Unit
 ) {
     Column(
         modifier = Modifier
@@ -59,7 +61,11 @@ fun StudentMaterialScreen(
                     icon = null,
                     onClick = {
                         onAction(StudentQuizActions.onLoadPdfMaterial(material))
-                        onNavToDisplayPdfScreen()
+                        if(material.materialType== MaterialType.PDF){
+                            onNavToDisplayPdfScreen()
+                        } else{
+                            onNavToVideoScreen()
+                        }
                     },
                     onDelete = {},
                     onIconClick = {}

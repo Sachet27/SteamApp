@@ -1,5 +1,6 @@
 package com.example.steamapp.quiz_feature.presentation.components
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,7 +59,8 @@ fun AppTopBar(
     title: String?= null,
     userPfp: String?= null,
     onProfileClick: ()-> Unit,
-    onSignOut: ()-> Unit
+    onSignOut: ()-> Unit,
+    onStudentListClick: ()->Unit
 ) {
     TopAppBar(
         modifier = modifier.padding(8.dp),
@@ -88,11 +90,11 @@ fun AppTopBar(
                 Text(
                     modifier = modifier.padding(4.dp),
                     text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Thin, fontFamily = FontFamily(Font(R.font.montserrat_medium)), fontSize = 18.sp ,letterSpacing = 0.15.sp)){
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Thin, fontFamily = FontFamily(Font(R.font.montserrat_medium)), fontSize = 16.sp ,letterSpacing = 0.15.sp)){
                             append("Welcome back \uD83D\uDC4B\n")
                         }
                         withStyle(
-                            style = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 22.sp, fontFamily = FontFamily(Font(R.font.montserrat_medium)), letterSpacing = 0.25.sp)
+                            style = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp, fontFamily = FontFamily(Font(R.font.montserrat_medium)), letterSpacing = 0.25.sp)
                         ){
                             append(title?:"User")
                         }
@@ -105,10 +107,19 @@ fun AppTopBar(
                  verticalAlignment = Alignment.CenterVertically,
                  horizontalArrangement = Arrangement.spacedBy(10.dp)
              ) {
+                 IconButton(
+                     modifier = Modifier,
+                     onClick = onStudentListClick
+                 ) {
+                     Icon(
+                         imageVector = ImageVector.vectorResource(R.drawable.groups_24px),
+                         contentDescription = null,
+                         tint = MaterialTheme.colorScheme.onSurface,
+                         modifier = Modifier.size(24.dp)
+                     )
+                 }
                 IconButton(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .border(BorderStroke(0.5.dp, MaterialTheme.colorScheme.onSurface), CircleShape),
+                    modifier = Modifier,
                     onClick = onSignOut
                 ) {
                     Icon(
@@ -123,21 +134,25 @@ fun AppTopBar(
     )
 }
 
-@Preview
-@Composable
-private fun TopBarPreview() {
-    SteamAppTheme {
-        Scaffold(
-            topBar = { AppTopBar(
-                onProfileClick = {},
-                onSignOut = {},
-            ) }
-        ) {
-            Surface(
-                modifier = Modifier.fillMaxSize().padding(it)
-            ) {
-
-            }
-        }
-    }
-}
+//@Preview
+//@Composable
+//private fun TopBarPreview() {
+//    SteamAppTheme {
+//        Scaffold(
+//            topBar = { AppTopBar(
+//                onProfileClick = {},
+//                onSignOut = {},
+//                modifier = TODO(),
+//                title = TODO(),
+//                userPfp = TODO(),
+//                onStudentListClick = TODO(),
+//            ) }
+//        ) {
+//            Surface(
+//                modifier = Modifier.fillMaxSize().padding(it)
+//            ) {
+//
+//            }
+//        }
+//    }
+//}

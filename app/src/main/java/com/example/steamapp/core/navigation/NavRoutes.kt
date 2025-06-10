@@ -25,7 +25,6 @@ interface NavRoutes {
     @Serializable
     data class PdfDisplayRoute(val notSyncWithPi: Boolean): NavRoutes
 
-    //for students
     @Serializable
     data object StudentHomeRoute: NavRoutes
 
@@ -39,8 +38,20 @@ interface NavRoutes {
     data class StudentTestQuizScoreRoute( val score: Int, val total: Int): NavRoutes
 
     @Serializable
-    data object DummyPdfDisplay: NavRoutes
+    data object DummyPdfDisplayRoute: NavRoutes
+
+    @Serializable
+    data object DummyVideoDisplayRoute: NavRoutes
 
     @Serializable
     data object StudentAskAIRoute: NavRoutes
+
+    @Serializable
+    data object StudentProfileRoute: NavRoutes
+
+    @Serializable
+    data object StudentListRoute: NavRoutes
+
+    @Serializable
+    data object StudentDetailRoute: NavRoutes
 }

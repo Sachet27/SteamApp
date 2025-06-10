@@ -28,9 +28,7 @@ import com.example.steamapp.api.presentation.APIActions
 import com.example.steamapp.api.presentation.APIEvents
 import com.example.steamapp.api.presentation.APIViewModel
 import com.example.steamapp.api.presentation.AskAIScreen
-import com.example.steamapp.auth.domain.models.Role
 import com.example.steamapp.auth.presentation.AuthActions
-import com.example.steamapp.auth.presentation.AuthResponse
 import com.example.steamapp.auth.presentation.AuthViewModel
 import com.example.steamapp.auth.presentation.login.LoginScreen
 import com.example.steamapp.core.presentation.AddQuizOrMaterialDialog
@@ -53,7 +51,9 @@ import com.example.steamapp.quiz_feature.presentation.components.BottomNavItems
 import com.example.steamapp.quiz_feature.presentation.display.DisplayScreen
 import com.example.steamapp.quiz_feature.presentation.display.ScoreScreen
 import com.example.steamapp.quiz_feature.presentation.home.HomeScreen
+import com.example.steamapp.student.StudentProfileScreen
 import com.example.steamapp.student.material.StudentMaterialScreen
+import com.example.steamapp.student.material.VideoDisplayScreen
 import com.example.steamapp.student.quiz.components.CustomStudentScaffold
 import com.example.steamapp.student.quiz.presentation.StudentQuizActions
 import com.example.steamapp.student.quiz.presentation.home.StudentHomeScreen
@@ -68,6 +68,8 @@ import java.time.Instant
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavHost() {
+
+
     val koin = getKoin()
     val studentScope = remember { koin.createScope<SubGraph.StudentRoute>() }
 
@@ -254,7 +256,12 @@ fun AppNavHost() {
                     onSelectItem = {
                         selectedBottomNavBarItem = it
                     },
-                    selectedItem = selectedBottomNavBarItem
+                    selectedItem = selectedBottomNavBarItem,
+                    onStudentListClick = {
+                        navController.navigate(
+                            NavRoutes.StudentListRoute
+                        )
+                    }
                 ) {
                     HomeScreen(
                         state = quizState,
@@ -383,7 +390,10 @@ fun AppNavHost() {
                     onSelectItem = {
                         selectedBottomNavBarItem = it
                     },
-                    selectedItem = selectedBottomNavBarItem
+                    selectedItem = selectedBottomNavBarItem,
+                    onStudentListClick = {
+                        navController.navigate(NavRoutes.StudentListRoute)
+                    }
                 ) {
                     MaterialScreen(
                         state = materialState,
@@ -417,8 +427,9 @@ fun AppNavHost() {
                     },
                     onMaterialActions = materialViewModel::onAction
                 )
-
             }
+
+
         }
 
         navigation<SubGraph.StudentRoute>(startDestination = NavRoutes.StudentHomeRoute) {
@@ -426,6 +437,7 @@ fun AppNavHost() {
 
             composable<NavRoutes.StudentHomeRoute> {
                 val state by studentViewModel.quizState.collectAsStateWithLifecycle()
+
                 CustomStudentScaffold(
                     selectedItem = selectedBottomNavBarItem,
                     onBottomItemClick = {
@@ -451,6 +463,12 @@ fun AppNavHost() {
                         authViewModel.onAction(AuthActions.OnSignOut)
                     },
                     onSelectItem = { selectedBottomNavBarItem = it },
+                    onProfileClick = {
+                        userId?.let {
+                            studentViewModel.onAction(StudentQuizActions.onLoadStudentReport(it))
+                            navController.navigate(NavRoutes.StudentProfileRoute)
+                        }?: Toast.makeText(context, "Report hasn't been made yet", Toast.LENGTH_SHORT).show()
+                    }
                 ) {
                     StudentHomeScreen(
                         state = state,
@@ -492,13 +510,24 @@ fun AppNavHost() {
                         authViewModel.onAction(AuthActions.OnSignOut)
                     },
                     onSelectItem = { selectedBottomNavBarItem = it },
+                    onProfileClick = {
+                        userId?.let {
+                            studentViewModel.onAction(StudentQuizActions.onLoadStudentReport(it))
+                            navController.navigate(NavRoutes.StudentProfileRoute)
+                        }?: Toast.makeText(context, "Report hasn't been made yet", Toast.LENGTH_SHORT).show()
+                    }
                 ) {
                     StudentMaterialScreen(
                         state = state,
                         onAction = studentViewModel::onAction,
                         onNavToDisplayPdfScreen = {
                             navController.navigate(
-                                NavRoutes.DummyPdfDisplay
+                                NavRoutes.DummyPdfDisplayRoute
+                            )
+                        },
+                        onNavToVideoScreen = {
+                            navController.navigate(
+                                NavRoutes.DummyVideoDisplayRoute
                             )
                         }
                     )
@@ -540,11 +569,11 @@ fun AppNavHost() {
                 )
             }
 
-            composable<NavRoutes.DummyPdfDisplay> {
+            composable<NavRoutes.DummyPdfDisplayRoute> {
                 val state by studentViewModel.quizState.collectAsStateWithLifecycle()
                 DisplayPdfScreen(
                     syncWithPi = false,
-                    material = state.selectedMaterial?: StudyMaterial(
+                    material = state.selectedMaterial ?: StudyMaterial(
                         id = 0L,
                         name = "No material",
                         description = null,
@@ -560,6 +589,22 @@ fun AppNavHost() {
                 )
             }
 
+            composable<NavRoutes.DummyVideoDisplayRoute> {
+                val state by studentViewModel.quizState.collectAsStateWithLifecycle()
+                VideoDisplayScreen(
+                    syncWithPi = false,
+                    player = mediaViewModel.player,
+                    state = state,
+                    onSetAudio = {
+                        val uri = it.absolutePath.toUri()
+                        mediaViewModel.setAudioUri(uri)
+                    },
+                    onAPIActions = apiViewModel::onAction,
+                    modifier = Modifier,
+                    onBackNav = {navController.popBackStack()}
+                )
+            }
+
             composable<NavRoutes.StudentAskAIRoute> {
                 AskAIScreen(
                     state = aiQuestionState,
@@ -569,7 +614,28 @@ fun AppNavHost() {
                         navController.popBackStack()
                         apiViewModel.onAction(APIActions.onClearAIQuestionState)
                     },
-                    userId = userId?: "Guest"
+                    userId = userId ?: "Guest"
+                )
+            }
+
+            composable<NavRoutes.StudentProfileRoute> {
+                val studentDetail by studentViewModel.studentDetails.collectAsStateWithLifecycle()
+                LaunchedEffect(studentDetail) {
+                    Log.d("Yeet", studentDetail.toString())
+                }
+                ObserveAsEvents(events = studentViewModel.events) { event ->
+                    when (event) {
+                        is APIEvents.Error -> {
+                            Toast.makeText(context, event.error.toString(context), Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+                StudentProfileScreen(
+                    modifier= Modifier,
+                    studentDetail= studentDetail,
+                    onBackNav = {
+                        navController.popBackStack()
+                    }
                 )
             }
         }

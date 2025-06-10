@@ -1,8 +1,11 @@
 package com.example.steamapp.api.presentation
 
 import android.widget.Space
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +54,7 @@ import com.example.steamapp.R
 import com.example.steamapp.api.domain.models.AnswerStyle
 import com.example.steamapp.quiz_feature.presentation.add_and_edit.components.QuizEditTopBar
 import com.example.steamapp.ui.theme.SteamAppTheme
+import com.example.steamapp.ui.theme.yellowish
 
 @Composable
 fun AskAIScreen(
@@ -61,7 +65,7 @@ fun AskAIScreen(
     userId: String
 ) {
     var question by remember{ mutableStateOf("") }
-    var selectedChipIndex by remember { mutableStateOf(1) }
+    var think by remember { mutableStateOf(false) }
 
     Scaffold(
        topBar = {
@@ -95,39 +99,9 @@ fun AskAIScreen(
                modifier = modifier
                    .fillMaxSize()
                    .padding(padding)
-                   .padding(top= 12.dp, start = 12.dp, end= 12.dp, bottom= 70.dp)
+                   .padding(top= 12.dp, start = 12.dp, end= 12.dp, bottom= 80.dp)
            ) {
-               Text("Select a style:")
-               Spacer(Modifier.height(8.dp))
-               Row(
-                   modifier = Modifier.fillMaxWidth(),
-                   verticalAlignment = Alignment.CenterVertically,
-                   horizontalArrangement = Arrangement.SpaceAround
-               ){
-                   AnswerStyle.list.forEachIndexed { index, answerStyle ->
-                       val selected= index == selectedChipIndex
-                       AssistChip(
-                           colors = AssistChipDefaults.assistChipColors(
-                               containerColor = if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                               labelColor = if(selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                           ),
-                           onClick = {
-                               selectedChipIndex= index
-                               onAPIActions(APIActions.onSelectAnswerStyle( userId= userId, answerStyle = AnswerStyle.list[selectedChipIndex]))
-                           },
-                           label = {
-                               val label= when(answerStyle){
-                                   AnswerStyle.THINK -> "THINK"
-                                   AnswerStyle.NO_THINK -> "DON'T THINK"
-                               }
-                               Text(
-                                   text= label
-                               )
-                           },
-                       )
-                   }
-               }
-               Spacer(Modifier.height(20.dp))
+               Spacer(Modifier.height(30.dp))
 
                if(state.question!=null){
                    Row(
@@ -198,38 +172,75 @@ fun AskAIScreen(
                 .padding(16.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier.weight(1f),
-                    value = question,
-                    onValueChange = { question = it },
-                    placeholder = {
+            Column(
+                modifier = modifier
+            ){
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable {
+                            think= !think
+                        }
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(40))
+                        .border(
+                            border = BorderStroke(0.5.dp,
+                                if(think) yellowish else MaterialTheme.colorScheme.onSurface),
+                            shape = RoundedCornerShape(40)
+                        )
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
+
+
+                ){
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.lightbulb_24px),
+                        contentDescription = null,
+                        tint = if(think) yellowish else MaterialTheme.colorScheme.onSurface
+                    )
+                    AnimatedVisibility(
+                        visible = think
+                    ) {
                         Text(
-                            text = "Ask a question!"
+                            text= "Reason",
+                            color = yellowish,
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
-                )
-                IconButton(
-                    onClick = {
-                        onAPIActions(APIActions.onClearAIQuestionState)
-                        onAPIActions(APIActions.onAskOllama(
-                            userId = userId,
-                            question = question,
-                            think = selectedChipIndex== 0
-                        ))
-                    }
-                ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.send_icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(30.dp)
-                    )
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.weight(1f),
+                        value = question,
+                        onValueChange = { question = it },
+                        placeholder = {
+                            Text(
+                                text = "Ask a question!"
+                            )
+                        }
+                    )
+                    IconButton(
+                        onClick = {
+                            onAPIActions(APIActions.onClearAIQuestionState)
+                            onAPIActions(APIActions.onAskOllama(
+                                userId = userId,
+                                question = question,
+                                think = think
+                            ))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.send_icon),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                }
+
             }
         }
     }

@@ -15,6 +15,7 @@ import com.example.steamapp.quiz_feature.presentation.components.AppBottomBar
 import com.example.steamapp.quiz_feature.presentation.components.AppTopBar
 import com.example.steamapp.quiz_feature.presentation.components.BottomNavItems
 import com.example.steamapp.quiz_feature.presentation.components.BottomNavigationList
+import com.example.steamapp.student.quiz.presentation.StudentAppTopBar
 
 
 @Composable
@@ -25,6 +26,7 @@ fun CustomStudentScaffold(
     onNavToAIScreen: ()->Unit,
     userId: String?,
     onSignOut: ()->Unit,
+    onProfileClick: ()->Unit,
     onSelectItem: (BottomNavItems)-> Unit,
     content: @Composable ()->Unit
 ) {
@@ -51,9 +53,9 @@ fun CustomStudentScaffold(
             }
         },
         topBar = {
-            AppTopBar(
+            StudentAppTopBar(
                 title = userId,
-                onProfileClick = {},
+                onProfileClick = onProfileClick,
                 onSignOut = onSignOut,
             )
         }
