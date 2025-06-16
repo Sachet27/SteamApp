@@ -6,4 +6,5 @@ import com.example.steamapp.student.StudentDetail
 
 interface StudentDataSource {
     suspend fun getStudentReport(name: String): Result<StudentDetail, NetworkError>
+    suspend fun getStudentList(): Result<List<String>, NetworkError>
 }

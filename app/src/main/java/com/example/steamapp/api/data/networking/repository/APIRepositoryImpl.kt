@@ -19,6 +19,7 @@ import com.example.steamapp.api.domain.models.AIAnswer
 import com.example.steamapp.api.domain.models.AIQuestion
 import com.example.steamapp.api.domain.models.Display
 import com.example.steamapp.api.domain.models.FileInfo
+import com.example.steamapp.api.domain.models.MicAction
 import com.example.steamapp.api.domain.models.Score
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.core.data.internal_storage.FileManager
@@ -107,6 +108,17 @@ class APIRepositoryImpl(
         }
     }
 
+    override suspend fun micToggle(micAction: MicAction): EmptyResult<NetworkError> {
+        return safeCall {
+            httpClient.post(
+                urlString = constructQuizUrl("/mic-action")
+            ){
+                contentType(ContentType.Application.Json)
+                setBody(micAction)
+            }
+        }
+    }
+
 
     override suspend fun getMaterials(): Result<List<StudyMaterial>, NetworkError> {
         return safeCall<List<StudyMaterial>> {
@@ -190,6 +202,14 @@ class APIRepositoryImpl(
         return safeCall<StudentDetail> {
             httpClient.get(
                 urlString = constructQuizUrl("/student-performance/$formattedName")
+            )
+        }
+    }
+
+    override suspend fun getStudentList(): Result<List<String>, NetworkError> {
+        return safeCall<List<String>> {
+            httpClient.get(
+                urlString = constructQuizUrl("/student-performance")
             )
         }
     }

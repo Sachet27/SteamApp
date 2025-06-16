@@ -17,6 +17,7 @@ import com.example.steamapp.MainActivity
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.api.presentation.APIEvents
 import com.example.steamapp.core.data.internal_storage.FileManager
+import com.example.steamapp.core.presentation.student.StudentListState
 import com.example.steamapp.core.util.formatQuizName
 import com.example.steamapp.core.util.networking.onError
 import com.example.steamapp.core.util.networking.onSuccess
@@ -53,6 +54,13 @@ class MaterialViewModel(
     private val pdfBitmapConverter: PdfBitmapConverter,
     private val pdfScanner: GmsDocumentScanner,
 ): ViewModel(){
+
+    private val _studentListState= MutableStateFlow(StudentListState())
+    val studentListState= _studentListState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        StudentListState()
+    )
 
     private val _selectedMaterial= MutableStateFlow<StudyMaterial?>(null)
     val selectedMaterial= _selectedMaterial.asStateFlow()
@@ -93,6 +101,56 @@ class MaterialViewModel(
             is MaterialActions.onSelectMaterial -> {selectMaterial(id = actions.id, callBack = actions.callBack)}
             is MaterialActions.onLoadDisplayMaterial -> {loadDisplayMaterial(actions.material)}
             is MaterialActions.onRenderPages -> renderPages(actions.context, actions.material, actions.callBack)
+            is MaterialActions.onClearSelectedStudentReport -> { clearSelectedReport() }
+            is MaterialActions.onLoadStudentReport -> { loadSelectedStudentReport(actions.name)}
+            is MaterialActions.onLoadStudentsList -> {  loadStudentList()}
+        }
+    }
+
+    private fun loadSelectedStudentReport(name: String){
+        _studentListState.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch (Dispatchers.IO) {
+            apiRepository.getStudentReport(name = name)
+                .onSuccess { report->
+                    _studentListState.update {
+                        it.copy(isLoading = false, selectedStudentReport = report)
+                    }
+                }
+                .onError { error->
+                    _events.send(APIEvents.Error(error))
+                    _studentListState.update {
+                        it.copy(isLoading = false)
+                    }
+                }
+        }
+    }
+
+    private fun clearSelectedReport(){
+        _studentListState.update {
+            it.copy(selectedStudentReport = null )
+        }
+    }
+
+    private fun loadStudentList(){
+        _studentListState.update { it.copy(isLoading = true) }
+        viewModelScope.launch (Dispatchers.IO) {
+            apiRepository.getStudentList()
+                .onSuccess {students->
+                    _studentListState.update {
+                        it.copy(
+                            isLoading = false,
+                            studentList = students
+                        )
+                    }
+                }
+                .onError { error->
+                    _events.send(APIEvents.Error(error))
+                    _studentListState.update {
+                        it.copy(isLoading = false)
+                    }
+                }
         }
     }
 

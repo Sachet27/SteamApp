@@ -1,6 +1,8 @@
 package com.example.steamapp.api.presentation
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.steamapp.api.data.mappers.toUploadResponse
@@ -10,6 +12,7 @@ import com.example.steamapp.api.domain.models.AnswerStyle
 import com.example.steamapp.api.domain.models.AnswerStyleRequest
 import com.example.steamapp.api.domain.models.ControlMode
 import com.example.steamapp.api.domain.models.Display
+import com.example.steamapp.api.domain.models.MicAction
 import com.example.steamapp.api.domain.models.UploadResponse
 import com.example.steamapp.api.domain.repository.APIRepository
 import com.example.steamapp.api.presentation.components.DownloadState
@@ -38,6 +41,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.FileNotFoundException
 
 class APIViewModel (
@@ -88,6 +92,7 @@ class APIViewModel (
 
     fun onAction(action: APIActions){
         when(action){
+            is APIActions.onPushMicAction-> { pushMicAction(action.micOn, action.context)}
             is APIActions.onPushToPi-> { pushQuizWithQuestions(action.quizWithQuestions)}
             is APIActions.onCancelUpload-> {cancelUpload()}
             is APIActions.onCancelDownload -> { cancelDownload()}
@@ -124,6 +129,23 @@ class APIViewModel (
             is APIActions.onPushMaterialToPi -> { pushMaterial(action.material)}
             is APIActions.onPresentPdf -> {}
             is APIActions.onDeleteMaterialFromPi -> {deletePiMaterial(action.material)}
+        }
+    }
+
+
+    private fun pushMicAction(micOn: Boolean, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            apiRepository.micToggle(
+                MicAction(micOn)
+            )
+                .onSuccess {
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(context, if(micOn)"Mic turned on" else "Mic turned off", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .onError {
+                    _events.send(APIEvents.Error(it))
+                }
         }
     }
 

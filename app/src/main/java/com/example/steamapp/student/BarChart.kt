@@ -95,7 +95,7 @@ fun BarChart(
                         verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        val value= entry.key*100f
+                        val value= entry.key
                         Text(
                             text = value.toInt().toString(),
                             style = MaterialTheme.typography.labelSmall,
@@ -103,7 +103,7 @@ fun BarChart(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight(entry.key)
+                                .fillMaxHeight(entry.key/100f)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable {
@@ -157,11 +157,11 @@ private fun BarChartPreview() {
             modifier = Modifier.fillMaxSize().padding(16.dp).background(MaterialTheme.colorScheme.background)
         ) {
             val dataPoints= mapOf(
-                Pair(0.72f ,"Maths"),
-                Pair(0.65f,"Nepali"),
-                Pair(0.98f ,"Social"),
-                Pair(0.12f ,"English"),
-                Pair(0.45f ,"Science"),
+                Pair(72f ,"Maths"),
+                Pair(65f,"Nepali"),
+                Pair(98f ,"Social"),
+                Pair(12f ,"English"),
+                Pair(45f ,"Science"),
             )
             BarChart(
                 data = dataPoints,

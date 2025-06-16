@@ -5,9 +5,12 @@ import com.example.steamapp.api.domain.models.AIQuestion
 import com.example.steamapp.api.domain.models.AnswerStyle
 import com.example.steamapp.api.domain.models.AnswerStyleRequest
 import com.example.steamapp.api.domain.models.AnswerStyleResponse
+import com.example.steamapp.api.domain.models.MicAction
+import com.example.steamapp.core.util.networking.EmptyResult
 import com.example.steamapp.core.util.networking.NetworkError
 import com.example.steamapp.core.util.networking.Result
 
 interface AIDataSource {
     suspend fun askQuestion(question: AIQuestion): Result<AIAnswer, NetworkError>
+    suspend fun micToggle(micAction: MicAction): EmptyResult<NetworkError>
 }

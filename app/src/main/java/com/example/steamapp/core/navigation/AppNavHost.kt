@@ -34,6 +34,7 @@ import com.example.steamapp.auth.presentation.login.LoginScreen
 import com.example.steamapp.core.presentation.AddQuizOrMaterialDialog
 import com.example.steamapp.core.presentation.CustomScaffold
 import com.example.steamapp.core.presentation.ObserveAsEvents
+import com.example.steamapp.core.presentation.student.StudentListScreen
 import com.example.steamapp.core.presentation.toString
 import com.example.steamapp.material_feature.domain.models.StudyMaterial
 import com.example.steamapp.material_feature.presentation.MaterialActions
@@ -91,6 +92,7 @@ fun AppNavHost() {
     val aiQuestionState by apiViewModel.aiQuestionState.collectAsStateWithLifecycle()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val materialState by materialViewModel.materialState.collectAsStateWithLifecycle()
+    val studentListState by materialViewModel.studentListState.collectAsStateWithLifecycle()
 
 
     // 0 -> Upload existing pdf, 1-> create new pdf
@@ -258,6 +260,7 @@ fun AppNavHost() {
                     },
                     selectedItem = selectedBottomNavBarItem,
                     onStudentListClick = {
+                        materialViewModel.onAction(MaterialActions.onLoadStudentsList)
                         navController.navigate(
                             NavRoutes.StudentListRoute
                         )
@@ -392,6 +395,7 @@ fun AppNavHost() {
                     },
                     selectedItem = selectedBottomNavBarItem,
                     onStudentListClick = {
+                        materialViewModel.onAction(MaterialActions.onLoadStudentsList)
                         navController.navigate(NavRoutes.StudentListRoute)
                     }
                 ) {
@@ -429,6 +433,26 @@ fun AppNavHost() {
                 )
             }
 
+            composable<NavRoutes.StudentListRoute> {
+                StudentListScreen(
+                    state = studentListState,
+                    onBackNav = { navController.popBackStack() },
+                    onMaterialActions = materialViewModel::onAction,
+                    onNavToStudentDetailScreen = {
+                        navController.navigate(NavRoutes.StudentDetailRoute)
+                    }
+                )
+            }
+
+            composable<NavRoutes.StudentDetailRoute> {
+                StudentProfileScreen(
+                    studentDetail = studentListState.selectedStudentReport,
+                    onBackNav = {
+                        materialViewModel.onAction(MaterialActions.onClearSelectedStudentReport)
+                        navController.popBackStack()
+                    }
+                )
+            }
 
         }
 
@@ -504,6 +528,7 @@ fun AppNavHost() {
                     },
                     userId = userId,
                     onSignOut = {
+                        studentViewModel.onAction(StudentQuizActions.onClearStudentReport)
                         navController.navigate(SubGraph.AuthRoute) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -634,6 +659,7 @@ fun AppNavHost() {
                     modifier= Modifier,
                     studentDetail= studentDetail,
                     onBackNav = {
+                        studentViewModel.onAction(StudentQuizActions.onClearStudentReport)
                         navController.popBackStack()
                     }
                 )

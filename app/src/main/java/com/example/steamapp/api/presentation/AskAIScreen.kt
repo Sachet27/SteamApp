@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
@@ -64,8 +65,10 @@ fun AskAIScreen(
     onBackNav: ()->Unit,
     userId: String
 ) {
+    val context= LocalContext.current
     var question by remember{ mutableStateOf("") }
     var think by remember { mutableStateOf(false) }
+    var micOn by remember{ mutableStateOf(false) }
 
     Scaffold(
        topBar = {
@@ -99,7 +102,7 @@ fun AskAIScreen(
                modifier = modifier
                    .fillMaxSize()
                    .padding(padding)
-                   .padding(top= 12.dp, start = 12.dp, end= 12.dp, bottom= 80.dp)
+                   .padding(top= 12.dp, start = 12.dp, end= 12.dp, bottom= 90.dp)
            ) {
                Spacer(Modifier.height(30.dp))
 
@@ -176,37 +179,75 @@ fun AskAIScreen(
                 modifier = modifier
             ){
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clickable {
-                            think= !think
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable {
+                                think= !think
+                            }
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(40))
+                            .border(
+                                border = BorderStroke(0.5.dp,
+                                    if(think) yellowish else MaterialTheme.colorScheme.onSurface),
+                                shape = RoundedCornerShape(40)
+                            )
+                            .padding(vertical = 4.dp, horizontal = 8.dp)
+
+
+                    ){
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.lightbulb_24px),
+                            contentDescription = null,
+                            tint = if(think) yellowish else MaterialTheme.colorScheme.onSurface
+                        )
+                        AnimatedVisibility(
+                            visible = think
+                        ) {
+                            Text(
+                                text= "Reason",
+                                color = yellowish,
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(40))
-                        .border(
-                            border = BorderStroke(0.5.dp,
-                                if(think) yellowish else MaterialTheme.colorScheme.onSurface),
-                            shape = RoundedCornerShape(40)
-                        )
-                        .padding(vertical = 4.dp, horizontal = 8.dp)
 
-
-                ){
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.lightbulb_24px),
-                        contentDescription = null,
-                        tint = if(think) yellowish else MaterialTheme.colorScheme.onSurface
-                    )
-                    AnimatedVisibility(
-                        visible = think
-                    ) {
-                        Text(
-                            text= "Reason",
-                            color = yellowish,
-                            style = MaterialTheme.typography.labelLarge
-                        )
                     }
+
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clickable {
+                                micOn= !micOn
+                                onAPIActions(APIActions.onPushMicAction(micOn = micOn, context = context))
+                            }
+                            .padding(vertical = 8.dp, horizontal = 4.dp)
+                            .clip(RoundedCornerShape(40))
+                            .border(
+                                border = BorderStroke(0.5.dp,
+                                    if(micOn) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error) ,
+                                shape = RoundedCornerShape(40)
+                            )
+                            .padding(vertical = 4.dp, horizontal = 8.dp)
+
+                    ){
+                        Icon(
+                            imageVector = ImageVector.vectorResource(
+                                if(micOn) R.drawable.mic_24px else R.drawable.mic_off_24px
+                            ),
+                            contentDescription = null,
+                            tint = if(micOn) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+                        )
+
+                    }
+
                 }
+
+
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
